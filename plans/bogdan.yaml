@@ -52,4 +52,79 @@ workouts:
       - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 12, progression: double_progression, rest_seconds: 90}
       - {id: romanian_deadlift, sets: 2, rep_range: [8, 12], target_weight_kg: 35, progression: double_progression, rest_seconds: 120}
       - {id: face_pull, sets: 2, rep_range: [10, 15], target_weight_kg: 15, progression: double_progression, rest_seconds: 60, pairing_key: cable_2}
-
+workout_variants:
+  home:
+    A:
+      name: Bogdan Home Full Body A
+      emphasis: [chest, back]
+      exercises:
+        - {id: dumbbell_floor_press, sets: 2, rep_range: [8, 12], target_weight_kg: 10, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_1}
+        - id: band_assisted_pull_up
+          sets: 2
+          rep_range: [6, 10]
+          target_weight_kg: 0
+          progression: manual
+          rest_seconds: 60
+          pairing_key: home_pull_up_1
+          manual_override: true
+          instructions: [Choose assistance that leaves about two good reps in reserve.]
+        - {id: goblet_squat, sets: 2, rep_range: [10, 15], target_weight_kg: 16, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_1}
+        - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 8, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_2}
+        - {id: kettlebell_deadlift, sets: 2, rep_range: [10, 15], target_weight_kg: 24, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_2}
+    B:
+      name: Bogdan Home Full Body B
+      emphasis: [back, shoulders]
+      exercises:
+        - id: trx_inverted_row
+          sets: 2
+          rep_range: [10, 15]
+          target_weight_kg: 0
+          progression: manual
+          rest_seconds: 45
+          pairing_key: home_suspension_1
+          manual_override: true
+          instructions: [Move the feet to keep about two good reps in reserve.]
+        - {id: push_up, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_floor_1, manual_override: true}
+        - id: kettlebell_swing
+          sets: 2
+          rep_range: [12, 20]
+          target_weight_kg: 16
+          progression: double_progression
+          rest_seconds: 60
+          pairing_key: home_kettlebell_1
+          instructions: [Use a crisp hip hinge; stop the set if the back starts doing the work.]
+        - {id: dumbbell_lateral_raise, sets: 2, rep_range: [12, 20], target_weight_kg: 4, progression: double_progression, rest_seconds: 45, pairing_key: home_dumbbells_1}
+        - {id: banded_face_pull, sets: 2, rep_range: [12, 20], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_band_1, manual_override: true}
+    C:
+      name: Bogdan Home Full Body C
+      emphasis: [chest, shoulders]
+      exercises:
+        - {id: push_up, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_floor_1, manual_override: true}
+        - id: kettlebell_row
+          sets: 2
+          rep_range: [8, 12]
+          target_weight_kg: 16
+          progression: double_progression
+          rest_seconds: 60
+          pairing_key: home_kettlebell_1
+          instructions: [Complete the prescribed reps on each side.]
+        - {id: goblet_squat, sets: 2, rep_range: [10, 15], target_weight_kg: 16, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_2}
+        - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 8, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_1}
+        - {id: weighted_hip_raise, sets: 2, rep_range: [10, 15], target_weight_kg: 24, progression: double_progression, rest_seconds: 60, pairing_key: home_floor_2}
+    D:
+      name: Bogdan Home Full Body D
+      emphasis: [back, chest]
+      exercises:
+        - {id: dumbbell_floor_press, sets: 2, rep_range: [8, 12], target_weight_kg: 10, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_1}
+        - id: band_assisted_pull_up
+          sets: 2
+          rep_range: [6, 10]
+          target_weight_kg: 0
+          progression: manual
+          rest_seconds: 60
+          pairing_key: home_pull_up_1
+          manual_override: true
+          instructions: [Choose assistance that leaves about two good reps in reserve.]
+        - {id: kettlebell_deadlift, sets: 2, rep_range: [10, 15], target_weight_kg: 24, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_1}
+        - {id: suspension_hamstring_curl, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 60, pairing_key: home_suspension_1, manual_override: true}
+        - {id: dumbbell_biceps_curl, sets: 2, rep_range: [10, 15], target_weight_kg: 8, progression: double_progression, rest_seconds: 45, pairing_key: home_dumbbells_2}

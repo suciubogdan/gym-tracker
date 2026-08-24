@@ -32,10 +32,12 @@ def round_to_increment(value: float, increment: float) -> float:
 
 
 def _relevant_sets(
-    history: list[CompletedStrengthWorkout], exercise_id: str
+    history: list[CompletedStrengthWorkout], exercise_id: str, workout_name: str
 ) -> list[list[CompletedSet]]:
     sessions: list[list[CompletedSet]] = []
     for workout in sorted(history, key=lambda item: item.started_at, reverse=True):
+        if workout.workout_name != workout_name:
+            continue
         for exercise in workout.exercises:
             if exercise.exercise_id == exercise_id:
                 sessions.append(exercise.sets)
@@ -44,6 +46,7 @@ def _relevant_sets(
 
 def evaluate_exercise(
     workout_key: str,
+    workout_name: str,
     prescription: ExercisePrescription,
     definition: ExerciseDefinition,
     history: list[CompletedStrengthWorkout],
@@ -62,7 +65,7 @@ def evaluate_exercise(
             reason="manual override enabled",
         )
 
-    sessions = _relevant_sets(history, prescription.id)
+    sessions = _relevant_sets(history, prescription.id, workout_name)
     if not sessions:
         return ProgressionChange(
             workout_key=workout_key,
@@ -165,6 +168,7 @@ def propose_progression(
             changes.append(
                 evaluate_exercise(
                     workout_key,
+                    workout.name,
                     prescription,
                     registry[prescription.id],
                     history,

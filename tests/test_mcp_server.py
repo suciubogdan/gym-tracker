@@ -14,6 +14,7 @@ def test_coaching_tools_are_registered() -> None:
     names = {tool.name for tool in tools}
     assert {
         "import_recent_workouts",
+        "get_training_locations",
         "record_workout_feedback",
         "mark_workout_missed",
         "mark_workout_rescheduled",
@@ -22,6 +23,7 @@ def test_coaching_tools_are_registered() -> None:
         "propose_next_week",
         "save_coaching_proposal",
         "get_week_proposal",
+        "propose_session_location",
         "apply_week_proposal",
         "get_weekly_plan",
         "get_pending_checkins",

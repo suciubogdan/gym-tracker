@@ -29,8 +29,9 @@ incoming activities. Tests use `FakeGarminClient`, so no test requires an accoun
 
 ## Sources of truth
 
-- `plans/<person>.yaml`: canonical planned workouts, targets, phase and weekly schedule.
+- `plans/<person>.yaml`: canonical gym workouts, location variants, targets, phase and schedule.
 - `config/exercises.yaml`: internal exercise registry and separately verified Garmin mappings.
+- `config/locations.yaml`: available equipment, venue constraints, and person-specific limitations.
 - `config/progression.yaml`: deterministic progression and safety policy.
 - `data/imported/<person>/<activity-id>.yaml`: normalized, inspectable completed training history.
 - `data/sync/<person>.yaml`: remote workout ids and last-synchronized content hashes.
@@ -67,7 +68,9 @@ Coaching reconciliation joins the dated plan, explicit attendance, optional feed
 activities. Matching is exact by stored Garmin activity id or workout name within the planned/effective
 date window; it never fuzzily assigns health history. The deterministic engine remains the baseline.
 Agent-authored changes are typed, stale-checked, scope-checked, and safety-checked before they can be
-saved. Application is a separate action and materializes a weekly snapshot.
+saved. Application is a separate action and materializes a weekly snapshot. A location change
+replaces only the selected dated A/B/C/D session with its configured variant; it does not rewrite
+the recurring gym program. Distinct workout names keep home evidence out of gym load progression.
 
 ## Boundaries and failure policy
 

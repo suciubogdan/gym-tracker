@@ -1,0 +1,37 @@
+locations:
+  gym:
+    display_name: Gym
+    equipment:
+      - type: commercial_gym
+        notes: Equipment requirements are defined by the canonical gym exercises.
+    constraints: []
+    person_constraints: {}
+  home:
+    display_name: Home
+    equipment:
+      - type: adjustable_dumbbells
+        quantity: 2
+        bar_weight_kg: 2
+        pair_capacity_kg: 20
+        plates_kg: [1, 2]
+        notes: One dumbbell may be loaded above 10 kg when the other is not used.
+      - type: kettlebells
+        weights_kg: [4, 8, 16, 24, 32]
+      - type: resistance_bands
+        maximum_claimed_resistance_kg: 60
+        anchors: [wall_hook, pull_up_bar]
+      - type: pull_up_bar
+      - type: suspension_trainer
+      - type: chair_or_step
+      - type: floor_or_rug
+    constraints:
+      - Training area is approximately 3 m by 2 m.
+      - Sessions should take less than 30 minutes.
+      - Jumping, noise, and overhead movements are allowed.
+      - There is no bench, barbell, rack, or plate-loaded barbell setup.
+    person_constraints:
+      bogdan:
+        - No currently reported material movement restriction.
+      roxana:
+        - Knees are sometimes sensitive; use controlled pain-free knee flexion.
+        - Avoid jumping and deep loaded knee flexion until provoking movements are clarified.

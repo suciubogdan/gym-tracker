@@ -14,8 +14,12 @@ def test_both_plans_load_and_have_four_full_body_sessions(
         plan = repository.load_plan(person)
         assert plan.person == person
         assert set(plan.workouts) == {"A", "B", "C", "D"}
+        assert set(plan.workout_variants["home"]) == {"A", "B", "C", "D"}
         assert len(plan.weekly_schedule) == 4
         assert all(len(workout.exercises) == 6 for workout in plan.workouts.values())
+        assert all(
+            len(workout.exercises) == 5 for workout in plan.workout_variants["home"].values()
+        )
 
 
 def test_plan_yaml_round_trip(repository: ProjectRepository) -> None:
@@ -41,3 +45,13 @@ def test_registry_has_unique_reverse_mappings(repository: ProjectRepository) -> 
     registry = repository.load_registry()
     mapped_count = sum(item.garmin is not None for item in registry.exercises.values())
     assert len(registry.reverse_garmin()) == mapped_count
+
+
+def test_home_variants_use_known_mapped_exercises(repository: ProjectRepository) -> None:
+    registry = repository.load_registry()
+    location = repository.load_locations().require("home")
+    assert "30 minutes" in " ".join(location.constraints)
+    for person in repository.people():
+        for workout in repository.load_plan(person).workout_variants["home"].values():
+            for prescription in workout.exercises:
+                assert registry.require(prescription.id).garmin is not None

@@ -15,7 +15,8 @@ works without an agent and never calls an LLM API.
 The recurring program in `plans/<person>.yaml` remains canonical for ongoing programming. A weekly
 snapshot can override loads, sets, reps, exercises, or dates for one week without changing that base.
 An `ongoing` proposal change updates both the base and the target week; a `week` change updates only
-the dated snapshot.
+the dated snapshot. Home A/B/C/D variants also live in the plan, while `config/locations.yaml`
+records the equipment and constraints they were designed around.
 
 ## Fallback behavior
 
@@ -67,6 +68,23 @@ uv run gym coach apply bogdan --week 2026-08-31 --json
 uv run gym coach plan bogdan --week 2026-08-31 --json
 ```
 
+If one gym session must happen at home, create a week-only location proposal. It does not alter the
+recurring gym workout:
+
+```bash
+uv run gym coach locations --json
+uv run gym coach location bogdan --week 2026-08-31 --workout A \
+  --location home --reason "Working from home" --json
+uv run gym coach proposal bogdan --week 2026-08-31 --json
+# after review:
+uv run gym coach apply bogdan --week 2026-08-31 --json
+```
+
+The included home variants use five exercises, two working sets, and short rests to fit under 30
+minutes. Dumbbell and kettlebell loads are conservative starting prescriptions; band resistance and
+bodyweight movements remain manual. Roxana's variants avoid jumping, lunges, step-ups, and deep knee
+flexion for now, and every knee-dominant repetition must remain in a comfortable range.
+
 `coach propose` supplies the safe deterministic baseline. Through MCP, an agent can replace it with a
 validated coaching proposal containing `CoachChange` objects:
 
@@ -85,8 +103,9 @@ validated coaching proposal containing `CoachChange` objects:
 }
 ```
 
-Kinds are `load`, `sets`, `rep_range`, `exercise`, and `schedule`. Schedule changes must be
-week-scoped and stay within the target Monday–Sunday. Exercise replacements contain a full
+Kinds are `load`, `sets`, `rep_range`, `exercise`, `schedule`, and `location`. Schedule and location
+changes must be week-scoped; schedule changes stay within the target Monday–Sunday. Exercise
+replacements contain a full
 prescription and require an exact configured Garmin mapping. Old values are mandatory stale-write
 guards. Excessive load jumps are converted to review flags and skipped during apply.
 
@@ -122,7 +141,8 @@ but keep proposal apply, Garmin sync, and Garmin schedule as approval-gated acti
 
 ## MCP tools
 
-The MCP surface includes reading plans/history, importing recent Garmin workouts with confirmation,
+The MCP surface includes reading plans, locations, and history; importing recent Garmin workouts
+with confirmation,
 recording feedback/attendance, reconciliation/adherence, coaching context, deterministic and custom
 proposal creation, proposal inspection/application, weekly plan inspection, pending check-ins, and
 week-aware Garmin diff/sync/schedule. Local apply requires `confirm=true`; external Garmin writes

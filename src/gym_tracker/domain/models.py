@@ -55,6 +55,7 @@ class ExercisePrescription(DomainModel):
     rest_seconds: int = Field(ge=0, le=900)
     pairing_key: str | None = None
     manual_override: bool = False
+    instructions: list[str] = Field(default_factory=list)
 
     @field_validator("rep_range")
     @classmethod
@@ -90,6 +91,7 @@ class TrainingPlan(DomainModel):
     weekly_schedule: dict[str, str]
     phase: IntroductoryPhase
     workouts: dict[str, PlannedWorkout]
+    workout_variants: dict[str, dict[str, PlannedWorkout]] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def valid_schedule(self) -> TrainingPlan:
@@ -99,7 +101,30 @@ class TrainingPlan(DomainModel):
         expected = self.schedule.get("workouts_per_week")
         if expected is not None and expected != len(self.weekly_schedule):
             raise ValueError("workouts_per_week must match weekly_schedule entries")
+        base_keys = set(self.workouts)
+        for location, variants in self.workout_variants.items():
+            if set(variants) != base_keys:
+                raise ValueError(
+                    f"{location!r} workout variants must define exactly {sorted(base_keys)}"
+                )
         return self
+
+
+class TrainingLocation(DomainModel):
+    display_name: str
+    equipment: list[dict[str, Any]] = Field(default_factory=list)
+    constraints: list[str] = Field(default_factory=list)
+    person_constraints: dict[str, list[str]] = Field(default_factory=dict)
+
+
+class LocationRegistry(DomainModel):
+    locations: dict[str, TrainingLocation]
+
+    def require(self, location: str) -> TrainingLocation:
+        try:
+            return self.locations[location]
+        except KeyError as exc:
+            raise ValueError(f"Unknown training location: {location}") from exc
 
 
 class CompletedSet(DomainModel):
@@ -310,6 +335,7 @@ class ReconciledSession(DomainModel):
     effective_date: date
     workout_key: str
     workout_name: str
+    location: str = "gym"
     status: AttendanceStatus
     garmin_activity_id: str | None = None
     feedback_recorded: bool = False
@@ -336,6 +362,7 @@ class WeeklySessionPlan(DomainModel):
     scheduled_date: date
     workout_key: str
     workout: PlannedWorkout
+    location: str = "gym"
 
 
 class WeeklyPlan(DomainModel):
@@ -370,6 +397,7 @@ class CoachChangeKind(StrEnum):
     REP_RANGE = "rep_range"
     EXERCISE = "exercise"
     SCHEDULE = "schedule"
+    LOCATION = "location"
 
 
 class CoachChangeScope(StrEnum):
@@ -397,11 +425,11 @@ class CoachChange(DomainModel):
 
     @model_validator(mode="after")
     def valid_target(self) -> CoachChange:
-        if self.kind == CoachChangeKind.SCHEDULE:
+        if self.kind in {CoachChangeKind.SCHEDULE, CoachChangeKind.LOCATION}:
             if self.exercise_id is not None:
-                raise ValueError("schedule changes cannot target an exercise")
+                raise ValueError(f"{self.kind.value} changes cannot target an exercise")
             if self.scope != CoachChangeScope.WEEK:
-                raise ValueError("schedule changes must be week-scoped")
+                raise ValueError(f"{self.kind.value} changes must be week-scoped")
         elif self.exercise_id is None:
             raise ValueError(f"{self.kind.value} changes require exercise_id")
         return self

@@ -31,6 +31,9 @@ reviewable proposal. Never make the Python application call an LLM.
 5. Call `get_coaching_context`, then `propose_next_week`. Treat the deterministic proposal as the
    baseline. If evidence warrants a scoped adjustment, save it with `save_coaching_proposal` and a
    concrete rationale/evidence list.
+   If the user cannot reach the gym, read `get_training_locations`, then call
+   `propose_session_location` for the affected A/B/C/D
+   session instead of marking it missed. Show the selected home variant and keep it week-scoped.
 6. Show the full proposal: dated sessions, each old/new value, scope, rationale, review flags,
    unresolved attendance, and optional questions. Missing feedback does not block the proposal.
 7. Call `apply_week_proposal(confirm=true)` only after the user explicitly approves that displayed
@@ -60,6 +63,9 @@ reviewable proposal. Never make the Python application call an LLM.
   are not applied. Exercise substitutions must have an exact verified Garmin mapping.
 - Preserve both programs as full-body and retain each person's configured bias unless the user
   explicitly changes the goal.
+- Home variants use separate workout names and prescriptions so they do not advance or regress the
+  corresponding gym loads. For Roxana, keep knee flexion controlled and pain-free; do not diagnose,
+  and replace or skip any movement that increases knee discomfort.
 
 Read [coaching policy](../../../docs/coaching.md) when you need the change schema, fallback details,
 or an end-to-end command example. Read [Hermes deployment](../../../docs/hermes.md) when running

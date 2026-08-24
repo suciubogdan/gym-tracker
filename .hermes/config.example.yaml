@@ -20,6 +20,7 @@ mcp_servers:
     tools:
       include:
         - "get_training_plan"
+        - "get_training_locations"
         - "get_recent_workouts"
         - "import_recent_workouts"
         - "get_training_status"
@@ -32,6 +33,7 @@ mcp_servers:
         - "propose_next_week"
         - "save_coaching_proposal"
         - "get_week_proposal"
+        - "propose_session_location"
         - "apply_week_proposal"
         - "get_weekly_plan"
         - "get_pending_checkins"

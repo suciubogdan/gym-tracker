@@ -16,6 +16,7 @@ from gym_tracker.domain.models import (
     CoachingProposal,
     CompletedStrengthWorkout,
     ExerciseRegistry,
+    LocationRegistry,
     ProgressionProposal,
     SyncState,
     TrainingPlan,
@@ -77,6 +78,9 @@ class ProjectRepository:
 
     def load_progression_settings(self) -> dict[str, Any]:
         return dict(load_yaml(self.root / "config" / "progression.yaml"))
+
+    def load_locations(self) -> LocationRegistry:
+        return LocationRegistry.model_validate(load_yaml(self.root / "config" / "locations.yaml"))
 
     def history(self, person: str, days: int | None = None) -> list[CompletedStrengthWorkout]:
         items = [

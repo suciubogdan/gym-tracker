@@ -52,4 +52,102 @@ workouts:
       - {id: leg_curl, sets: 2, rep_range: [8, 12], target_weight_kg: 15, progression: double_progression, rest_seconds: 75}
       - {id: incline_dumbbell_bench_press, sets: 2, rep_range: [8, 12], target_weight_kg: 8, progression: double_progression, rest_seconds: 90, pairing_key: bench_2}
       - {id: face_pull, sets: 2, rep_range: [10, 15], target_weight_kg: 10, progression: double_progression, rest_seconds: 60, pairing_key: cable_2}
-
+workout_variants:
+  home:
+    A:
+      name: Roxana Home Full Body A
+      emphasis: [glutes, quadriceps]
+      exercises:
+        - {id: weighted_hip_raise, sets: 2, rep_range: [10, 15], target_weight_kg: 16, progression: double_progression, rest_seconds: 60, pairing_key: home_floor_1}
+        - id: goblet_squat
+          sets: 2
+          rep_range: [8, 12]
+          target_weight_kg: 8
+          progression: double_progression
+          rest_seconds: 60
+          pairing_key: home_kettlebell_1
+          instructions: [Use the couch or chair as a depth target; stay in a pain-free range and stop if knee discomfort increases.]
+        - id: trx_inverted_row
+          sets: 2
+          rep_range: [10, 15]
+          target_weight_kg: 0
+          progression: manual
+          rest_seconds: 45
+          pairing_key: home_suspension_1
+          manual_override: true
+          instructions: [Move the feet to keep about two good reps in reserve.]
+        - {id: dumbbell_floor_press, sets: 2, rep_range: [8, 12], target_weight_kg: 6, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_1}
+        - id: lateral_band_walk
+          sets: 2
+          rep_range: [10, 15]
+          target_weight_kg: 0
+          progression: manual
+          rest_seconds: 45
+          pairing_key: home_band_1
+          manual_override: true
+          instructions: [Count reps each direction and keep the knee bend shallow and pain-free.]
+    B:
+      name: Roxana Home Full Body B
+      emphasis: [hamstrings, glutes]
+      exercises:
+        - {id: kettlebell_deadlift, sets: 2, rep_range: [10, 15], target_weight_kg: 16, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_1}
+        - {id: suspension_hamstring_curl, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 60, pairing_key: home_suspension_1, manual_override: true}
+        - {id: incline_push_up, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_couch_1, manual_override: true}
+        - id: kettlebell_row
+          sets: 2
+          rep_range: [10, 15]
+          target_weight_kg: 8
+          progression: double_progression
+          rest_seconds: 60
+          pairing_key: home_kettlebell_2
+          instructions: [Complete the prescribed reps on each side.]
+        - {id: banded_face_pull, sets: 2, rep_range: [12, 20], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_band_1, manual_override: true}
+    C:
+      name: Roxana Home Full Body C
+      emphasis: [glutes, quadriceps]
+      exercises:
+        - {id: banded_glute_bridge, sets: 2, rep_range: [12, 20], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_band_1, manual_override: true}
+        - id: goblet_squat
+          sets: 2
+          rep_range: [8, 12]
+          target_weight_kg: 8
+          progression: double_progression
+          rest_seconds: 60
+          pairing_key: home_kettlebell_1
+          instructions: [Use the couch or chair as a depth target; stay in a pain-free range and stop if knee discomfort increases.]
+        - {id: dumbbell_floor_press, sets: 2, rep_range: [8, 12], target_weight_kg: 6, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_1}
+        - id: trx_inverted_row
+          sets: 2
+          rep_range: [10, 15]
+          target_weight_kg: 0
+          progression: manual
+          rest_seconds: 45
+          pairing_key: home_suspension_1
+          manual_override: true
+          instructions: [Move the feet to keep about two good reps in reserve.]
+        - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 6, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_2}
+    D:
+      name: Roxana Home Full Body D
+      emphasis: [glutes, hamstrings]
+      exercises:
+        - {id: kettlebell_deadlift, sets: 2, rep_range: [10, 15], target_weight_kg: 16, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_1}
+        - {id: single_leg_hip_raise, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_floor_1, manual_override: true}
+        - {id: incline_push_up, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_couch_1, manual_override: true}
+        - id: trx_inverted_row
+          sets: 2
+          rep_range: [10, 15]
+          target_weight_kg: 0
+          progression: manual
+          rest_seconds: 45
+          pairing_key: home_suspension_1
+          manual_override: true
+          instructions: [Move the feet to keep about two good reps in reserve.]
+        - id: lateral_band_walk
+          sets: 2
+          rep_range: [10, 15]
+          target_weight_kg: 0
+          progression: manual
+          rest_seconds: 45
+          pairing_key: home_band_1
+          manual_override: true
+          instructions: [Count reps each direction and keep the knee bend shallow and pain-free.]

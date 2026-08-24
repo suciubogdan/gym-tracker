@@ -31,3 +31,14 @@ def test_missing_mapping_fails_before_upload(repository: ProjectRepository) -> N
     registry = ExerciseRegistry.model_validate(raw)
     with pytest.raises(UnmappedExerciseError, match="no verified Garmin mapping"):
         serialize_strength_workout(workout, registry)
+
+
+def test_home_variants_serialize_under_thirty_minutes(
+    repository: ProjectRepository,
+) -> None:
+    registry = repository.load_registry()
+    for person in repository.people():
+        variants = repository.load_plan(person).workout_variants["home"]
+        for workout in variants.values():
+            payload = serialize_strength_workout(workout, registry)
+            assert payload["estimatedDurationInSecs"] < 30 * 60

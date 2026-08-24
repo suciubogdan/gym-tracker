@@ -103,4 +103,93 @@ exercises:
     increment_kg: 2.5
     equipment: {type: cable_machine, station: cable_station}
     garmin: {category: TRICEPS_EXTENSION, exercise: CABLE_KICKBACK}
-
+  dumbbell_floor_press:
+    display_name: Dumbbell Floor Press
+    muscle_groups: [chest, triceps, anterior_deltoid]
+    increment_kg: 2.0
+    equipment: {type: dumbbells, station: floor}
+    garmin: {category: BENCH_PRESS, exercise: DUMBBELL_FLOOR_PRESS}
+  push_up:
+    display_name: Push-up
+    muscle_groups: [chest, triceps, anterior_deltoid, core]
+    increment_kg: 1.0
+    equipment: {type: bodyweight, station: floor}
+    garmin: {category: PUSH_UP, exercise: PUSH_UP}
+  incline_push_up:
+    display_name: Incline Push-up
+    muscle_groups: [chest, triceps, anterior_deltoid, core]
+    increment_kg: 1.0
+    equipment: {type: bodyweight, station: couch_or_chair}
+    garmin: {category: PUSH_UP, exercise: INCLINE_PUSH_UP}
+  band_assisted_pull_up:
+    display_name: Band-assisted Pull-up
+    muscle_groups: [latissimus_dorsi, upper_back, biceps]
+    increment_kg: 1.0
+    equipment: {type: resistance_band, station: pull_up_bar}
+    garmin: {category: PULL_UP, exercise: BAND_ASSISTED_PULL_UP}
+  trx_inverted_row:
+    display_name: TRX Inverted Row
+    muscle_groups: [upper_back, latissimus_dorsi, biceps]
+    increment_kg: 1.0
+    equipment: {type: suspension_trainer, station: pull_up_bar}
+    garmin: {category: ROW, exercise: TRX_INVERTED_ROW}
+  kettlebell_deadlift:
+    display_name: Kettlebell Deadlift
+    muscle_groups: [hamstrings, glutes, back]
+    increment_kg: 4.0
+    equipment: {type: kettlebell, station: floor}
+    garmin: {category: DEADLIFT, exercise: KETTLEBELL_DEADLIFT}
+  kettlebell_swing:
+    display_name: Kettlebell Swing
+    muscle_groups: [glutes, hamstrings, back, core]
+    increment_kg: 4.0
+    equipment: {type: kettlebell, station: floor}
+    garmin: {category: HIP_RAISE, exercise: KETTLEBELL_SWING}
+  kettlebell_row:
+    display_name: Kettlebell Row
+    muscle_groups: [upper_back, latissimus_dorsi, biceps]
+    increment_kg: 4.0
+    equipment: {type: kettlebell, station: floor}
+    garmin: {category: ROW, exercise: KETTLEBELL_ROW}
+  weighted_hip_raise:
+    display_name: Weighted Hip Raise
+    muscle_groups: [glutes, hamstrings]
+    increment_kg: 4.0
+    equipment: {type: kettlebell, station: floor_or_couch}
+    garmin: {category: HIP_RAISE, exercise: WEIGHTED_HIP_RAISE}
+  single_leg_hip_raise:
+    display_name: Single-leg Hip Raise
+    muscle_groups: [glutes, hamstrings]
+    increment_kg: 1.0
+    equipment: {type: bodyweight, station: floor}
+    garmin: {category: HIP_RAISE, exercise: SINGLE_LEG_HIP_RAISE}
+  banded_glute_bridge:
+    display_name: Banded Glute Bridge
+    muscle_groups: [glutes, hamstrings, hip_abductors]
+    increment_kg: 1.0
+    equipment: {type: resistance_band, station: floor}
+    garmin: {category: BANDED_EXERCISES, exercise: GLUTE_BRIDGE}
+  banded_hamstring_curl:
+    display_name: Banded Hamstring Curl
+    muscle_groups: [hamstrings]
+    increment_kg: 1.0
+    equipment: {type: resistance_band, station: wall_hook}
+    garmin: {category: BANDED_EXERCISES, exercise: HAMSTRING_CURLS}
+  suspension_hamstring_curl:
+    display_name: Suspension Hamstring Curl
+    muscle_groups: [hamstrings, glutes]
+    increment_kg: 1.0
+    equipment: {type: suspension_trainer, station: pull_up_bar}
+    garmin: {category: SUSPENSION, exercise: HAMSTRING_CURL}
+  banded_face_pull:
+    display_name: Banded Face Pull
+    muscle_groups: [rear_deltoid, upper_back]
+    increment_kg: 1.0
+    equipment: {type: resistance_band, station: wall_hook}
+    garmin: {category: ROW, exercise: BANDED_FACE_PULLS}
+  lateral_band_walk:
+    display_name: Lateral Walk with Band at Ankles
+    muscle_groups: [glutes, hip_abductors]
+    increment_kg: 1.0
+    equipment: {type: resistance_band, station: floor}
+    garmin: {category: HIP_STABILITY, exercise: LATERAL_WALKS_WITH_BAND_AT_ANKLES}

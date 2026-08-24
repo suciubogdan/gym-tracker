@@ -50,6 +50,7 @@ class CoachingService:
                 scheduled_date=week_start + timedelta(days=WEEKDAY_NUMBERS[weekday.lower()]),
                 workout_key=workout_key,
                 workout=plan.workouts[workout_key].model_copy(deep=True),
+                location="gym",
             )
             for weekday, workout_key in plan.weekly_schedule.items()
         ]
@@ -236,6 +237,7 @@ class CoachingService:
                     effective_date=effective_date,
                     workout_key=session.workout_key,
                     workout_name=session.workout.name,
+                    location=session.location,
                     status=status,
                     garmin_activity_id=(activity.garmin_activity_id if activity else None),
                     feedback_recorded=feedback is not None,
@@ -420,6 +422,64 @@ class CoachingService:
         self.repository.save_coaching_proposal(proposal)
         return proposal
 
+    def propose_session_location(
+        self,
+        *,
+        person: str,
+        target_week: date,
+        workout_key: str,
+        location: str,
+        rationale: str,
+    ) -> CoachingProposal:
+        require_monday(target_week)
+        plan = self.repository.load_plan(person)
+        weekly = self._weekly_plan(person, target_week)
+        try:
+            session = next(item for item in weekly.sessions if item.workout_key == workout_key)
+        except StopIteration as exc:
+            raise ValueError(f"Unknown workout {workout_key!r}") from exc
+        normalized_location = location.strip().lower()
+        retained: list[CoachChange] = []
+        questions: list[str] = []
+        notes: list[str] = []
+        try:
+            existing = self.repository.load_coaching_proposal(person, target_week)
+        except FileNotFoundError:
+            existing = None
+        if (
+            existing is not None
+            and existing.applied_at is None
+            and existing.base_plan_hash == model_hash(plan)
+        ):
+            retained = [
+                item
+                for item in existing.changes
+                if not (item.kind == CoachChangeKind.LOCATION and item.workout_key == workout_key)
+            ]
+            questions = existing.questions
+            notes = existing.notes
+        change = CoachChange(
+            kind=CoachChangeKind.LOCATION,
+            scope=CoachChangeScope.WEEK,
+            workout_key=workout_key,
+            old_value=session.location,
+            new_value=normalized_location,
+            rationale=rationale,
+            evidence=["user reported that the gym is unavailable"],
+            source=CoachChangeSource.USER,
+        )
+        return self.save_proposal(
+            person=person,
+            target_week=target_week,
+            summary=(
+                f"Proposed {normalized_location} variant for {workout_key}; "
+                "the recurring gym plan remains unchanged."
+            ),
+            changes=[*retained, change],
+            questions=questions,
+            notes=notes,
+        )
+
     @staticmethod
     def _prescription(workout: PlannedWorkout, exercise_id: str) -> ExercisePrescription:
         try:
@@ -431,12 +491,38 @@ class CoachingService:
         self, plan: TrainingPlan, weekly: WeeklyPlan, changes: list[CoachChange]
     ) -> list[CoachChange]:
         registry = self.repository.load_registry()
+        locations = self.repository.load_locations()
         settings = ProgressionSettings(**self.repository.load_progression_settings())
-        validated: list[CoachChange] = []
-        weekly_by_key = {item.workout_key: item for item in weekly.sessions}
-        for change in changes:
+        normalized_changes: dict[int, CoachChange] = {}
+        validation_weekly = deepcopy(weekly)
+        weekly_by_key = {item.workout_key: item for item in validation_weekly.sessions}
+        for index, change in enumerate(changes):
             if change.workout_key not in weekly_by_key or change.workout_key not in plan.workouts:
                 raise ValueError(f"Unknown workout {change.workout_key!r}")
+            if change.kind == CoachChangeKind.LOCATION:
+                session = weekly_by_key[change.workout_key]
+                current = session.location
+                if current != str(change.old_value):
+                    raise ValueError(
+                        f"Stale location value for {change.workout_key}: expected {current}"
+                    )
+                proposed_location = str(change.new_value).strip().lower()
+                if proposed_location == "gym":
+                    proposed_workout = plan.workouts[change.workout_key]
+                else:
+                    locations.require(proposed_location)
+                    variants = plan.workout_variants.get(proposed_location)
+                    if variants is None or change.workout_key not in variants:
+                        raise ValueError(
+                            f"No {proposed_location!r} variant for workout {change.workout_key}"
+                        )
+                    proposed_workout = variants[change.workout_key]
+                session.location = proposed_location
+                session.workout = proposed_workout.model_copy(deep=True)
+                normalized_changes[index] = change.model_copy(
+                    update={"new_value": proposed_location}
+                )
+                continue
             if change.kind == CoachChangeKind.SCHEDULE:
                 current = weekly_by_key[change.workout_key].scheduled_date.isoformat()
                 proposed_date = date.fromisoformat(str(change.new_value))
@@ -446,9 +532,14 @@ class CoachingService:
                     )
                 if not weekly.week_start <= proposed_date <= weekly.week_start + timedelta(days=6):
                     raise ValueError("schedule change must stay inside the target week")
-                validated.append(change.model_copy(update={"new_value": proposed_date.isoformat()}))
+                normalized_changes[index] = change.model_copy(
+                    update={"new_value": proposed_date.isoformat()}
+                )
                 continue
 
+        for index, change in enumerate(changes):
+            if index in normalized_changes:
+                continue
             assert change.exercise_id is not None
             workout = (
                 plan.workouts[change.workout_key]
@@ -501,8 +592,8 @@ class CoachingService:
                     f"Stale {change.kind.value} value for {change.workout_key}/"
                     f"{change.exercise_id}: expected {current_value!r}"
                 )
-            validated.append(normalized)
-        return validated
+            normalized_changes[index] = normalized
+        return [normalized_changes[index] for index in range(len(changes))]
 
     def _apply_change_to_workout(self, workout: PlannedWorkout, change: CoachChange) -> None:
         assert change.exercise_id is not None
@@ -532,18 +623,35 @@ class CoachingService:
         changes = self._validate_changes(plan, weekly, proposal.changes)
         plan_changed = False
         weekly_by_key = {item.workout_key: item for item in weekly.sessions}
-        for change in changes:
+        ordered_changes = sorted(
+            changes,
+            key=lambda item: 0 if item.kind == CoachChangeKind.LOCATION else 1,
+        )
+        for change in ordered_changes:
             if change.requires_review:
+                continue
+            if change.kind == CoachChangeKind.LOCATION:
+                session = weekly_by_key[change.workout_key]
+                location = str(change.new_value)
+                session.location = location
+                session.workout = (
+                    plan.workouts[change.workout_key].model_copy(deep=True)
+                    if location == "gym"
+                    else plan.workout_variants[location][change.workout_key].model_copy(deep=True)
+                )
                 continue
             if change.kind == CoachChangeKind.SCHEDULE:
                 weekly_by_key[change.workout_key].scheduled_date = date.fromisoformat(
                     str(change.new_value)
                 )
                 continue
-            self._apply_change_to_workout(weekly_by_key[change.workout_key].workout, change)
-            if change.scope == CoachChangeScope.ONGOING:
+            if change.scope == CoachChangeScope.WEEK:
+                self._apply_change_to_workout(weekly_by_key[change.workout_key].workout, change)
+            else:
                 self._apply_change_to_workout(plan.workouts[change.workout_key], change)
                 plan_changed = True
+                if weekly_by_key[change.workout_key].location == "gym":
+                    self._apply_change_to_workout(weekly_by_key[change.workout_key].workout, change)
         # Revalidate uniqueness and in-week dates after schedule mutations.
         weekly = WeeklyPlan.model_validate(weekly.model_dump())
         if plan_changed:

@@ -42,7 +42,8 @@ attendance, feedback, weekly plans, and Garmin workout identifiers are portable 
 
 Plans live in `plans/bogdan.yaml` and `plans/roxana.yaml`. Each workout contains internal exercise
 ids, working sets, a rep range, target kilograms, rest and an optional future equipment-sharing key.
-The introductory phase and weekly days are data, not hard-coded logic.
+The introductory phase and weekly days are data, not hard-coded logic. Each plan also contains home
+A/B/C/D variants; the shared home inventory and constraints live in `config/locations.yaml`.
 
 ```yaml
 - id: barbell_bench_press
@@ -168,6 +169,26 @@ uv run gym garmin sync bogdan --week 2026-08-31
 Application writes attendance and feedback under `data/`, and an approved dated snapshot under
 `weeks/<monday>/`. One-off changes stay in the week; ongoing changes also update the base plan. The
 repository-scoped `$gym-coach` skill provides the conversational layer and approval policy.
+
+### Training at home for one session
+
+The home programs are full-body, five-exercise sessions designed for two sets per movement and less
+than 30 minutes. They use the configured dumbbells, kettlebells, bands, pull-up bar, rings/TRX, floor,
+and chair. Switch only the affected dated session through a reviewable proposal:
+
+```bash
+uv run gym coach locations --json
+uv run gym coach location bogdan --week 2026-08-31 --workout A \
+  --location home --reason "Working from home" --json
+uv run gym coach proposal bogdan --week 2026-08-31 --json
+# after review:
+uv run gym coach apply bogdan --week 2026-08-31
+uv run gym garmin sync bogdan --week 2026-08-31
+```
+
+The home workout has a distinct name, so its completed sets do not accidentally advance or regress
+the corresponding gym exercise. Report home feedback normally; the dated plan tells the coach which
+variant was performed.
 
 ## MCP setup for Codex
 

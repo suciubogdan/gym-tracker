@@ -42,6 +42,9 @@ class GymService:
     def get_training_plan(self, person: str) -> dict[str, Any]:
         return self.repository.load_plan(person).model_dump(mode="json")
 
+    def get_training_locations(self) -> dict[str, Any]:
+        return self.repository.load_locations().model_dump(mode="json")
+
     def get_recent_workouts(self, person: str, days: int = 7) -> list[dict[str, Any]]:
         return [item.model_dump(mode="json") for item in self.repository.history(person, days)]
 
@@ -167,6 +170,23 @@ class GymService:
 
     def get_coaching_proposal(self, person: str, target_week: date) -> CoachingProposal:
         return self.repository.load_coaching_proposal(person, target_week)
+
+    def propose_session_location(
+        self,
+        *,
+        person: str,
+        target_week: date,
+        workout_key: str,
+        location: str,
+        rationale: str,
+    ) -> CoachingProposal:
+        return self._coach().propose_session_location(
+            person=person,
+            target_week=target_week,
+            workout_key=workout_key,
+            location=location,
+            rationale=rationale,
+        )
 
     def apply_coaching_proposal(self, person: str, target_week: date) -> CoachingProposal:
         return self._coach().apply_proposal(person, target_week)

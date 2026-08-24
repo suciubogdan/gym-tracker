@@ -205,6 +205,14 @@ def coach_feedback(
     _emit(feedback.model_dump(mode="json"), json_output)
 
 
+@coach_app.command("locations")
+def coach_locations(
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Show configured training venues, equipment, and constraints."""
+    _emit(_service().get_training_locations(), json_output)
+
+
 @coach_app.command("missed")
 def coach_missed(
     person: str,
@@ -285,6 +293,26 @@ def coach_proposal(
 ) -> None:
     """Inspect the saved proposal for a target week."""
     proposal = _service().get_coaching_proposal(person, _parse_week(week))
+    _emit(proposal.model_dump(mode="json"), json_output)
+
+
+@coach_app.command("location")
+def coach_location(
+    person: str,
+    week: Annotated[str, typer.Option("--week")],
+    workout: Annotated[str, typer.Option("--workout")],
+    location: Annotated[str, typer.Option("--location")] = "home",
+    reason: Annotated[str, typer.Option()] = "Gym unavailable; train at home",
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Propose a week-scoped gym/home variant for one A/B/C/D session."""
+    proposal = _service().propose_session_location(
+        person=person,
+        target_week=_parse_week(week),
+        workout_key=workout,
+        location=location,
+        rationale=reason,
+    )
     _emit(proposal.model_dump(mode="json"), json_output)
 
 

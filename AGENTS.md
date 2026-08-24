@@ -2,7 +2,8 @@
 
 ## Repository contract
 
-This is a local-first strength planner. `plans/*.yaml`, `config/exercises.yaml`, normalized
+This is a local-first strength planner. `plans/*.yaml`, `config/exercises.yaml`,
+`config/locations.yaml`, normalized
 `data/imported/`, and explicit progression policy are the source of truth. Garmin is an execution and
 capture target, never the canonical plan. The application must work without AI and must not call an
 LLM API.
@@ -36,6 +37,8 @@ uv run gym garmin sync bogdan --dry-run --json
 - People are `bogdan` and `roxana`, each with A/B/C/D and four configured weekdays.
 - Both programs stay full-body. Preserve Bogdan's upper-body/chest/back/shoulder bias and Roxana's
   glute/leg bias unless the user explicitly changes goals.
+- Preserve exact A/B/C/D home variants and derive them only from `config/locations.yaml`. Home
+  sessions target less than 30 minutes. Keep Roxana's knee work controlled and pain-free.
 - Default working philosophy is approximately two sets, mostly 8–12, about six exercises and 45–60
   minutes. These are data conventions, not code constants.
 - Do not change exercise selection merely because a load should progress.
@@ -52,6 +55,9 @@ only a proposal; `progress apply` is the separate local mutation and must reject
 Always show the user a proposal before applying it. A request to analyze or propose is not approval
 to apply.
 
+Home and gym prescriptions use distinct workout names. Progression evidence must match the exact
+workout name so a home session cannot mutate the recurring gym load.
+
 ## Coaching rules
 
 Reconcile dated plans, explicit attendance, feedback, and exact Garmin activity identity before
@@ -63,6 +69,7 @@ Coach changes are typed and must state week/ongoing scope, old/new values, ratio
 Pain, excessive difficulty, or technique breakdown suppresses automatic increases and prompts
 review, not diagnosis. Preserve deterministic progression as the baseline, manual overrides, load
 jump review flags, and exact exercise mappings. Always show a weekly proposal before local apply.
+Location changes are week-scoped proposals that replace only the selected dated session.
 
 ## Garmin rules
 

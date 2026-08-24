@@ -36,14 +36,17 @@ def definition(increment: float = 2.5) -> ExerciseDefinition:
 
 
 def session(
-    reps: tuple[int, int], weight: float = 40, days_ago: int = 0
+    reps: tuple[int, int],
+    weight: float = 40,
+    days_ago: int = 0,
+    workout_name: str = "A",
 ) -> CompletedStrengthWorkout:
     exercise_id = "barbell_bench_press"
     return CompletedStrengthWorkout(
         person="bogdan",
         garmin_activity_id=str(100 + days_ago),
         started_at=datetime.now(UTC) - timedelta(days=days_ago),
-        workout_name="A",
+        workout_name=workout_name,
         exercises=[
             CompletedExercise(
                 exercise_id=exercise_id,
@@ -70,6 +73,7 @@ def evaluate(
     weight: float = 40,
 ) -> object:
     return evaluate_exercise(
+        "A",
         "A",
         prescription(weight),
         definition(),
@@ -110,6 +114,11 @@ def test_large_percentage_increase_requires_review() -> None:
     assert result.action == ProgressionAction.REVIEW  # type: ignore[attr-defined]
     assert result.requires_review is True  # type: ignore[attr-defined]
     assert result.new_weight_kg == 10  # type: ignore[attr-defined]
+
+
+def test_home_workout_does_not_advance_gym_prescription() -> None:
+    result = evaluate([session((12, 12), workout_name="Bogdan Home Full Body A")])
+    assert result.action == ProgressionAction.NO_DATA  # type: ignore[attr-defined]
 
 
 def test_increment_rounding_is_half_up() -> None:

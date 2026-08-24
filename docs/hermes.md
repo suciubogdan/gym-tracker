@@ -83,11 +83,13 @@ From WhatsApp, messages such as these should activate the project skill:
 
 - “I finished Bogdan A. Bench felt easy; everything else was on target.”
 - “I missed C because of travel.”
+- “I am working from home; switch Bogdan B this week to the home version.”
 - “Review this week and propose next week.”
 - “Show me the Garmin dry-run for next week.”
 
-The agent must show a proposal before applying it and must separately preview Garmin before any
-external write. Give Hermes an explicit standing instruction if you want portable personal-data
+For a home request, the agent reads the configured location inventory and proposes the matching
+week-only A/B/C/D variant. It must show a proposal before applying it and must separately preview
+Garmin before any external write. Give Hermes an explicit standing instruction if you want portable personal-data
 changes committed and pushed after each successful interaction. Its allowed Git scope is:
 
 ```text

@@ -34,6 +34,12 @@ def get_training_plan(person: str) -> dict[str, Any]:
 
 
 @mcp.tool()
+def get_training_locations() -> dict[str, Any]:
+    """Read configured venues, available equipment, and person-specific constraints."""
+    return _service().get_training_locations()
+
+
+@mcp.tool()
 def get_recent_workouts(person: str, days: int = 7) -> list[dict[str, Any]]:
     """Read normalized local workout history; no Garmin call is made."""
     return _service().get_recent_workouts(person, days)
@@ -180,6 +186,25 @@ def save_coaching_proposal(
 def get_week_proposal(person: str, target_week: str) -> dict[str, Any]:
     """Read the saved coaching proposal so it can be shown before approval."""
     value = _service().get_coaching_proposal(person, date.fromisoformat(target_week))
+    return value.model_dump(mode="json")
+
+
+@mcp.tool()
+def propose_session_location(
+    person: str,
+    target_week: str,
+    workout_key: str,
+    location: str = "home",
+    rationale: str = "Gym unavailable; train at home",
+) -> dict[str, Any]:
+    """Propose a week-only gym/home variant for one planned session; do not apply it."""
+    value = _service().propose_session_location(
+        person=person,
+        target_week=date.fromisoformat(target_week),
+        workout_key=workout_key,
+        location=location,
+        rationale=rationale,
+    )
     return value.model_dump(mode="json")
 
 
