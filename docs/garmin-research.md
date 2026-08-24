@@ -64,6 +64,19 @@ The completed strength endpoint returns an envelope resembling:
 kilograms. `exerciseSets` may be a list or a single object. The original activity id is the local
 idempotency key.
 
+## Template identity
+
+The integration keeps a separate remote workout for every configured location and A/B/C/D key.
+Sync state uses stable identities such as `gym:A` and `home:A`; workout names are presentation only.
+Legacy state keyed only by A/B/C/D is migrated to the corresponding gym identity without recreating
+or name-matching the remote workout. A dated plan may update the selected location's template with
+exact weekly values, while the other location's template and remote id remain intact.
+
+The maintained `StrengthWorkout` model accepts a `description` field and serializes it into the
+outgoing workout payload. Gym Tracker uses that field for a deterministic equipment manifest. The
+schedule endpoint accepts only a workout id and date, so scheduled entries inherit notes from the
+referenced workout template rather than carrying separate calendar notes.
+
 ## Exercise mapping strategy
 
 Internal exercise ids never equal Garmin enums implicitly. `config/exercises.yaml` owns the explicit

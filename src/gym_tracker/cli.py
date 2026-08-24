@@ -62,9 +62,10 @@ def _format_item(item: dict[str, Any]) -> str:
             f"[{str(item['action']).upper()}]\n  {item['reason']}"
         )
     if "action" in item and "workout_key" in item:
+        identity = item.get("template_key", item["workout_key"])
         return (
-            f"{item['workout_key']} · {item['workout_name']}: "
-            f"{str(item['action']).upper()} — {item['reason']}"
+            f"{identity} · {item['workout_name']}: "
+            f"{str(item['action']).upper()} — {item['reason']}\n  {item.get('notes', '')}"
         )
     return json.dumps(item, indent=2, default=str)
 
@@ -383,7 +384,7 @@ def garmin_diff(
     week: Annotated[str | None, typer.Option("--week")] = None,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    """Compare canonical local workouts to synchronized Garmin ids/hashes."""
+    """Compare all canonical gym/location templates to Garmin ids and hashes."""
     _emit(
         _service().get_garmin_diff(person, _parse_week(week) if week else None),
         json_output,
@@ -397,7 +398,7 @@ def garmin_sync(
     dry_run: Annotated[bool, typer.Option("--dry-run/--execute")] = True,
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    """Synchronize workouts. Defaults to a non-mutating dry run."""
+    """Synchronize distinct gym/location templates. Defaults to a dry run."""
     _emit(
         _service().sync_plan_to_garmin(
             person, dry_run=dry_run, week=_parse_week(week) if week else None

@@ -55,14 +55,24 @@ Progression reads the plan and history and produces a proposal tied to a hash of
 Apply refuses a stale proposal. The introductory phase requires repeated upper-bound success. Load
 jumps exceeding the configured percentage become review items and are not applied.
 
-Sync calculates a hash from each workout plus its Garmin exercise mappings. It creates missing
-workouts, updates changed workouts in place, and does nothing to unchanged workouts. State is saved
-after every verified remote mutation so a partial run can safely resume. The adapter has a fallback
-for old clients: create replacement, verify it appears, then delete the obsolete template.
+Sync calculates a hash from each workout plus its Garmin exercise mappings. Every location and
+A/B/C/D pair has a stable template key such as `gym:A` or `home:A`, so both variants remain visible
+in Garmin. Legacy `A/B/C/D` state entries migrate to `gym:A/B/C/D` without changing their remote ids.
+Sync creates missing workouts, updates changed workouts in place, and does nothing to unchanged
+workouts. State is saved after every verified remote mutation so a partial run can safely resume.
+The adapter has a fallback for old clients: create replacement, verify it appears, then delete the
+obsolete template.
 
-Scheduling requires a synchronized id, validates that `--week` is a Monday, reads existing calendar
-entries, and skips matching workout/date pairs. When a weekly snapshot exists, diff/sync with
-`--week` serializes its exact prescriptions and scheduling rejects stale remote hashes.
+The Garmin workout description is derived, not hand-maintained. For every prescription, the domain
+resolves a workout-level equipment override first and otherwise uses `config/exercises.yaml`. It
+then emits the station plus the current target load (`kg each` for dumbbells and `kg setting` for
+machines/cables). The generated equipment summary participates in the sync hash, so changing a load,
+station, or equipment definition produces an update rather than stale notes.
+
+Scheduling requires the synchronized id for the dated session's location, validates that `--week`
+is a Monday, reads existing calendar entries, and skips matching workout/date pairs. When a weekly
+snapshot exists, diff/sync with `--week` serializes its exact selected-location prescriptions and
+scheduling rejects stale remote hashes.
 
 Coaching reconciliation joins the dated plan, explicit attendance, optional feedback, and imported
 activities. Matching is exact by stored Garmin activity id or workout name within the planned/effective

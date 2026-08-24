@@ -68,8 +68,8 @@ workout_variants:
           pairing_key: home_pull_up_1
           manual_override: true
           instructions: [Choose assistance that leaves about two good reps in reserve.]
-        - {id: goblet_squat, sets: 2, rep_range: [10, 15], target_weight_kg: 16, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_1}
-        - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 8, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_2}
+        - {id: goblet_squat, sets: 2, rep_range: [10, 15], target_weight_kg: 16, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_1, equipment: {type: kettlebell, station: floor}}
+        - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 8, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_2, equipment: {type: dumbbells, station: floor_or_couch}}
         - {id: kettlebell_deadlift, sets: 2, rep_range: [10, 15], target_weight_kg: 24, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_2}
     B:
       name: Bogdan Home Full Body B
@@ -108,8 +108,8 @@ workout_variants:
           rest_seconds: 60
           pairing_key: home_kettlebell_1
           instructions: [Complete the prescribed reps on each side.]
-        - {id: goblet_squat, sets: 2, rep_range: [10, 15], target_weight_kg: 16, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_2}
-        - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 8, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_1}
+        - {id: goblet_squat, sets: 2, rep_range: [10, 15], target_weight_kg: 16, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_2, equipment: {type: kettlebell, station: floor}}
+        - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 8, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_1, equipment: {type: dumbbells, station: floor_or_couch}}
         - {id: weighted_hip_raise, sets: 2, rep_range: [10, 15], target_weight_kg: 24, progression: double_progression, rest_seconds: 60, pairing_key: home_floor_2}
     D:
       name: Bogdan Home Full Body D

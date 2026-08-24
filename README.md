@@ -137,17 +137,26 @@ uv run gym garmin schedule bogdan --week 2026-08-31
 uv run gym garmin schedule bogdan --week 2026-08-31 --execute
 ```
 
-Sync state under `data/sync/` records each Garmin workout id and a content/mapping hash. An unchanged
-run creates nothing. Changed workouts update in place; a compatibility fallback creates and verifies
-a replacement before deleting the obsolete workout. State is persisted after every successful
-mutation. Scheduling reads the calendar and skips the same workout/date pair.
+Sync state under `data/sync/` records each Garmin workout id and a content/mapping hash. Gym and home
+use independent stable keys (`gym:A`–`gym:D` and `home:A`–`home:D`), so all eight workouts remain
+available in Garmin. Existing legacy A/B/C/D ids migrate to the gym keys without recreation. An
+unchanged run creates nothing. Changed workouts update in place; a compatibility fallback creates
+and verifies a replacement before deleting the obsolete workout. State is persisted after every
+successful mutation. Scheduling reads the calendar, selects the dated session's location, and skips
+the same workout/date pair.
 
 Always inspect dry-run output immediately before `--execute`. Garmin deletions are limited to the
 guarded compatibility fallback; this tool does not delete unrelated remote workouts.
 
 Garmin workouts contain exact reps and kilograms. They do not evaluate double progression on the
-watch. Base sync publishes the current recurring A/B/C/D prescriptions; after approving a dated
-weekly plan, use `--week` to publish that week's exact numbers before scheduling it.
+watch. Base sync publishes both recurring gym and home A/B/C/D prescriptions; after approving a
+dated weekly plan, use `--week` to publish that week's exact selected-location numbers before
+scheduling it.
+
+Every uploaded workout also includes generated equipment notes. These list the required implement or
+station and the current target loads—for example, dumbbells in kilograms per hand, cable/machine
+settings, kettlebell weights, benches, racks, bands, and anchors. The notes are recalculated whenever
+the prescription changes and are included in dry-run hashes.
 
 ## Feedback-aware weekly coaching
 

@@ -66,6 +66,7 @@ workout_variants:
           progression: double_progression
           rest_seconds: 60
           pairing_key: home_kettlebell_1
+          equipment: {type: kettlebell, station: floor}
           instructions: [Use the couch or chair as a depth target; stay in a pain-free range and stop if knee discomfort increases.]
         - id: trx_inverted_row
           sets: 2
@@ -114,6 +115,7 @@ workout_variants:
           progression: double_progression
           rest_seconds: 60
           pairing_key: home_kettlebell_1
+          equipment: {type: kettlebell, station: floor}
           instructions: [Use the couch or chair as a depth target; stay in a pain-free range and stop if knee discomfort increases.]
         - {id: dumbbell_floor_press, sets: 2, rep_range: [8, 12], target_weight_kg: 6, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_1}
         - id: trx_inverted_row
@@ -125,7 +127,7 @@ workout_variants:
           pairing_key: home_suspension_1
           manual_override: true
           instructions: [Move the feet to keep about two good reps in reserve.]
-        - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 6, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_2}
+        - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 6, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_2, equipment: {type: dumbbells, station: floor_or_couch}}
     D:
       name: Roxana Home Full Body D
       emphasis: [glutes, hamstrings]

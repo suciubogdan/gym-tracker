@@ -39,7 +39,9 @@ reviewable proposal. Never make the Python application call an LLM.
 7. Call `apply_week_proposal(confirm=true)` only after the user explicitly approves that displayed
    proposal. After application, inspect `get_weekly_plan`.
 8. For Garmin, preview `get_garmin_diff`/`sync_plan_to_garmin` for that exact week. A real sync and
-   scheduling are separate external mutations and each require explicit user approval.
+   scheduling are separate external mutations and each require explicit user approval. When showing
+   a dated workout or schedule preview, include its generated equipment notes so the user can prepare
+   weights and confirm access to the required stations.
 9. After a persisted import, feedback, attendance, proposal apply, or verified Garmin sync, inspect
    Git changes. If repository synchronization has been authorized for this deployment, commit only
    portable personal-data paths (`plans/`, `data/imported/`, `data/attendance/`, `data/feedback/`,
@@ -64,8 +66,10 @@ reviewable proposal. Never make the Python application call an LLM.
 - Preserve both programs as full-body and retain each person's configured bias unless the user
   explicitly changes the goal.
 - Home variants use separate workout names and prescriptions so they do not advance or regress the
-  corresponding gym loads. For Roxana, keep knee flexion controlled and pain-free; do not diagnose,
-  and replace or skip any movement that increases knee discomfort.
+  corresponding gym loads. Gym and home templates remain separately available in Garmin; schedule
+  the template matching the approved weekly session location. For Roxana, keep knee flexion
+  controlled and pain-free; do not diagnose, and replace or skip any movement that increases knee
+  discomfort.
 
 Read [coaching policy](../../../docs/coaching.md) when you need the change schema, fallback details,
 or an end-to-end command example. Read [Hermes deployment](../../../docs/hermes.md) when running

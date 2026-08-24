@@ -43,6 +43,8 @@ uv run gym garmin sync bogdan --dry-run --json
   minutes. These are data conventions, not code constants.
 - Do not change exercise selection merely because a load should progress.
 - Equipment and `pairing_key` fields preserve future couple-training optimization.
+- Garmin workout descriptions must use the deterministic equipment summary. Resolve prescription
+  overrides before exercise defaults and include exact target-load semantics; never hand-copy notes.
 - Validate round-trip serialization after every schema change.
 
 ## Progression invariants
@@ -78,7 +80,8 @@ Location changes are week-scoped proposals that replace only the selected dated 
 - Unknown outgoing or incoming mappings fail loudly. Do not fuzzy-match health history.
 - Credentials/tokens belong only under `~/.config/gym-tracker/`; never log or commit them.
 - Raw Garmin health payloads belong in ignored `data/raw/`. Keep logs structural and sanitized.
-- Sync identity is the stored remote id plus local content/mapping hash, not workout name.
+- Sync identity is the stable location/workout key (for example `gym:A` or `home:A`) plus the stored
+  remote id and local content/mapping hash, not workout name. Preserve legacy A/B/C/D ids as gym ids.
 - Prefer in-place PUT update. Replacement order is create → verify → update state → delete obsolete;
   if verification fails, retain the old workout.
 - Scheduling must use the plan's `weekly_schedule`, not hard-coded weekdays.

@@ -112,8 +112,14 @@ guards. Excessive load jumps are converted to review flags and skipped during ap
 ## Garmin handoff
 
 Garmin templates contain exact numbers, not a future progression algorithm. Without `--week`, sync
-uses the recurring base plan's current minimum reps and target loads. After an approved weekly plan,
-sync that exact snapshot and then schedule it:
+publishes separate gym and home A/B/C/D templates using the recurring targets. Both sets remain
+visible in Garmin. After an approved weekly plan, sync any exact selected-location adjustments and
+then schedule it:
+
+Each template's notes contain its current equipment manifest: required stations and implements plus
+target loads. Dumbbell loads are labeled per hand, machine/cable loads as settings, and variable band
+resistance as “choose resistance.” Workout-level equipment overrides handle venue-specific choices,
+such as using a kettlebell for a home goblet squat.
 
 ```bash
 uv run gym garmin diff bogdan --week 2026-08-31
@@ -124,8 +130,9 @@ uv run gym garmin schedule bogdan --week 2026-08-31 --execute
 ```
 
 Scheduling verifies that every remote template hash matches the target week's prescription. This
-prevents an adjusted week from accidentally using stale weights. Because A/B/C/D are maintained as
-four remote templates, prepare and sync one active week at a time before scheduling it.
+prevents an adjusted week from accidentally using stale weights. Template identities are stable
+location/key pairs (`gym:A` through `gym:D`, `home:A` through `home:D`); weekly scheduling selects
+the correct id without overwriting the other location's workout.
 
 ## Conversational and recurring check-ins
 

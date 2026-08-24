@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from gym_tracker.domain.equipment import equipment_summary
 from gym_tracker.domain.models import ExerciseRegistry, PlannedWorkout
 
-GARMIN_SERIALIZER_VERSION = "strength-weight-value-kg-v2"
+GARMIN_SERIALIZER_VERSION = "strength-equipment-notes-v3"
 
 
 class UnmappedExerciseError(ValueError):
@@ -46,6 +47,7 @@ def serialize_strength_workout(
         estimated_seconds += item.sets * (40 + item.rest_seconds)
     typed = StrengthWorkout(
         workoutName=workout.name,
+        description=equipment_summary(workout, registry),
         estimatedDurationInSecs=estimated_seconds,
         workoutSegments=[
             WorkoutSegment(

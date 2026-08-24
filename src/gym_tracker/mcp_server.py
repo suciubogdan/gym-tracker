@@ -232,7 +232,7 @@ def get_pending_checkins(person: str, as_of: str) -> list[dict[str, str]]:
 
 @mcp.tool()
 def get_garmin_diff(person: str, week: str | None = None) -> list[dict[str, Any]]:
-    """Read Garmin state and compare it to the canonical local plan."""
+    """Compare all canonical gym/location templates to Garmin without mutation."""
     return _service().get_garmin_diff(person, date.fromisoformat(week) if week else None)
 
 
@@ -243,7 +243,7 @@ def sync_plan_to_garmin(
     dry_run: bool = True,
     confirm: bool = False,
 ) -> list[dict[str, Any]]:
-    """Sync externally; dry-run is the safe default and a real sync needs confirm=true."""
+    """Sync distinct gym/location templates; a real sync needs confirm=true."""
     if not dry_run and not confirm:
         raise ValueError("A Garmin mutation requires confirm=true")
     return _service().sync_plan_to_garmin(

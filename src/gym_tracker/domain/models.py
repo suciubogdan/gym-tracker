@@ -56,6 +56,7 @@ class ExercisePrescription(DomainModel):
     pairing_key: str | None = None
     manual_override: bool = False
     instructions: list[str] = Field(default_factory=list)
+    equipment: Equipment | None = None
 
     @field_validator("rep_range")
     @classmethod
@@ -190,6 +191,20 @@ class SyncState(DomainModel):
     person: str
     workouts: dict[str, SyncEntry] = Field(default_factory=dict)
 
+    @model_validator(mode="before")
+    @classmethod
+    def migrate_legacy_workout_keys(cls, value: Any) -> Any:
+        if not isinstance(value, dict) or not isinstance(value.get("workouts"), dict):
+            return value
+        raw = dict(value)
+        workouts = raw["workouts"]
+        migrated = {key: item for key, item in workouts.items() if ":" in key}
+        for key, item in workouts.items():
+            if ":" not in key:
+                migrated.setdefault(f"gym:{key}", item)
+        raw["workouts"] = migrated
+        return raw
+
 
 class DiffAction(StrEnum):
     CREATE = "create"
@@ -199,10 +214,13 @@ class DiffAction(StrEnum):
 
 
 class GarminDiffItem(DomainModel):
+    template_key: str
+    location: str
     workout_key: str
     workout_name: str
     action: DiffAction
     reason: str
+    notes: str
     local_hash: str
     garmin_workout_id: str | None = None
 
