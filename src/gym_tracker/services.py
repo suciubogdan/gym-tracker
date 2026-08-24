@@ -4,7 +4,19 @@ from collections.abc import Callable
 from datetime import UTC, date, datetime
 from typing import Any
 
-from gym_tracker.domain.models import ProgressionProposal
+from gym_tracker.coaching.service import CoachingService
+from gym_tracker.domain.models import (
+    AttendanceRecord,
+    AttendanceStatus,
+    CoachChange,
+    CoachingProposal,
+    ExerciseFeedback,
+    OverallFeedback,
+    ProgressionProposal,
+    WeeklyPlan,
+    WeekReconciliation,
+    WorkoutFeedback,
+)
 from gym_tracker.domain.progression import ProgressionSettings, apply_changes, propose_progression
 from gym_tracker.garmin.adapter import GarminConnectAdapter
 from gym_tracker.garmin.importer import import_recent
@@ -32,6 +44,9 @@ class GymService:
 
     def get_recent_workouts(self, person: str, days: int = 7) -> list[dict[str, Any]]:
         return [item.model_dump(mode="json") for item in self.repository.history(person, days)]
+
+    def _coach(self) -> CoachingService:
+        return CoachingService(self.repository)
 
     def get_training_status(self, person: str) -> dict[str, Any]:
         plan = self.repository.load_plan(person)
@@ -78,13 +93,104 @@ class GymService:
     def import_workouts(self, person: str, days: int = 7) -> dict[str, int]:
         return import_recent(self.repository, self.client_factory(person), person, days)
 
-    def get_garmin_diff(self, person: str) -> list[dict[str, Any]]:
-        service = GarminSyncService(self.repository, self.client_factory(person))
-        return [item.model_dump(mode="json") for item in service.diff(person)]
+    def record_workout_feedback(
+        self,
+        *,
+        person: str,
+        scheduled_date: date,
+        workout_key: str,
+        status: AttendanceStatus,
+        garmin_activity_id: str | None = None,
+        rescheduled_to: date | None = None,
+        reason: str | None = None,
+        overall: OverallFeedback | None = None,
+        exercises: list[ExerciseFeedback] | None = None,
+    ) -> WorkoutFeedback:
+        return self._coach().record_feedback(
+            person=person,
+            scheduled_date=scheduled_date,
+            workout_key=workout_key,
+            status=status,
+            garmin_activity_id=garmin_activity_id,
+            rescheduled_to=rescheduled_to,
+            reason=reason,
+            overall=overall,
+            exercises=exercises,
+        )
 
-    def sync_plan_to_garmin(self, person: str, *, dry_run: bool = True) -> list[dict[str, Any]]:
+    def mark_workout_attendance(
+        self,
+        *,
+        person: str,
+        scheduled_date: date,
+        workout_key: str,
+        status: AttendanceStatus,
+        reason: str | None = None,
+        rescheduled_to: date | None = None,
+    ) -> AttendanceRecord:
+        return self._coach().mark_attendance(
+            person=person,
+            scheduled_date=scheduled_date,
+            workout_key=workout_key,
+            status=status,
+            reason=reason,
+            rescheduled_to=rescheduled_to,
+        )
+
+    def reconcile_week(self, person: str, week: date) -> WeekReconciliation:
+        return self._coach().reconcile_week(person, week)
+
+    def get_coaching_context(self, person: str, target_week: date) -> dict[str, Any]:
+        return self._coach().get_context(person, target_week)
+
+    def propose_coaching_week(self, person: str, target_week: date) -> CoachingProposal:
+        return self._coach().propose_week(person, target_week)
+
+    def save_coaching_proposal(
+        self,
+        *,
+        person: str,
+        target_week: date,
+        summary: str,
+        changes: list[CoachChange],
+        questions: list[str] | None = None,
+        notes: list[str] | None = None,
+    ) -> CoachingProposal:
+        return self._coach().save_proposal(
+            person=person,
+            target_week=target_week,
+            summary=summary,
+            changes=changes,
+            questions=questions,
+            notes=notes,
+        )
+
+    def get_coaching_proposal(self, person: str, target_week: date) -> CoachingProposal:
+        return self.repository.load_coaching_proposal(person, target_week)
+
+    def apply_coaching_proposal(self, person: str, target_week: date) -> CoachingProposal:
+        return self._coach().apply_proposal(person, target_week)
+
+    def get_weekly_plan(self, person: str, week: date) -> WeeklyPlan:
+        return self.repository.load_weekly_plan(person, week) or self._coach().build_weekly_plan(
+            person, week
+        )
+
+    def get_pending_checkins(self, person: str, as_of: date) -> list[dict[str, str]]:
+        return self._coach().pending_checkins(person, as_of)
+
+    def get_garmin_diff(self, person: str, week: date | None = None) -> list[dict[str, Any]]:
         service = GarminSyncService(self.repository, self.client_factory(person))
-        return [item.model_dump(mode="json") for item in service.sync(person, dry_run=dry_run)]
+        return [item.model_dump(mode="json") for item in service.diff(person, week)]
+
+    def sync_plan_to_garmin(
+        self, person: str, *, dry_run: bool = True, week: date | None = None
+    ) -> list[dict[str, Any]]:
+        service = GarminSyncService(self.repository, self.client_factory(person))
+        return [
+            item.model_dump(mode="json")
+            for item in service.sync(person, dry_run=dry_run, week_start=week)
+        ]
 
     def schedule_week(
         self, person: str, week: date, *, dry_run: bool = True

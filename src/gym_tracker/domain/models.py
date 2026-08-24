@@ -206,3 +206,224 @@ class ProgressionProposal(DomainModel):
     created_at: datetime
     plan_hash: str
     changes: list[ProgressionChange]
+
+
+class AttendanceStatus(StrEnum):
+    PLANNED = "planned"
+    COMPLETED = "completed"
+    PARTIAL = "partial"
+    MISSED = "missed"
+    RESCHEDULED = "rescheduled"
+    UNRESOLVED = "unresolved"
+
+
+class ExerciseCompletionStatus(StrEnum):
+    COMPLETED = "completed"
+    SKIPPED = "skipped"
+    SUBSTITUTED = "substituted"
+
+
+class PerceivedDifficulty(StrEnum):
+    TOO_EASY = "too_easy"
+    ON_TARGET = "on_target"
+    TOO_HARD = "too_hard"
+    UNKNOWN = "unknown"
+
+
+class TechniqueQuality(StrEnum):
+    STABLE = "stable"
+    UNCERTAIN = "uncertain"
+    BROKE_DOWN = "broke_down"
+    UNKNOWN = "unknown"
+
+
+class AttendanceRecord(DomainModel):
+    person: str
+    scheduled_date: date
+    workout_key: str
+    status: AttendanceStatus
+    recorded_at: datetime
+    garmin_activity_id: str | None = None
+    rescheduled_to: date | None = None
+    reason: str | None = None
+
+    @model_validator(mode="after")
+    def reschedule_has_date(self) -> AttendanceRecord:
+        if self.status == AttendanceStatus.RESCHEDULED and self.rescheduled_to is None:
+            raise ValueError("rescheduled attendance requires rescheduled_to")
+        return self
+
+
+class ExerciseFeedback(DomainModel):
+    exercise_id: str
+    status: ExerciseCompletionStatus = ExerciseCompletionStatus.COMPLETED
+    difficulty: PerceivedDifficulty = PerceivedDifficulty.UNKNOWN
+    technique: TechniqueQuality = TechniqueQuality.UNKNOWN
+    rir: float | None = Field(default=None, ge=0, le=10)
+    substitute_exercise_id: str | None = None
+    notes: str | None = None
+
+    @model_validator(mode="after")
+    def substitution_has_exercise(self) -> ExerciseFeedback:
+        if (
+            self.status == ExerciseCompletionStatus.SUBSTITUTED
+            and self.substitute_exercise_id is None
+        ):
+            raise ValueError("substituted feedback requires substitute_exercise_id")
+        if (
+            self.status != ExerciseCompletionStatus.SUBSTITUTED
+            and self.substitute_exercise_id is not None
+        ):
+            raise ValueError("substitute_exercise_id is only valid for substituted feedback")
+        return self
+
+
+class OverallFeedback(DomainModel):
+    energy: int | None = Field(default=None, ge=1, le=5)
+    difficulty: int | None = Field(default=None, ge=1, le=5)
+    enjoyment: int | None = Field(default=None, ge=1, le=5)
+    recovery: int | None = Field(default=None, ge=1, le=5)
+    pain_or_discomfort: bool = False
+    pain_notes: str | None = None
+    notes: str | None = None
+
+
+class WorkoutFeedback(DomainModel):
+    person: str
+    scheduled_date: date
+    workout_key: str
+    recorded_at: datetime
+    garmin_activity_id: str | None = None
+    overall: OverallFeedback = Field(default_factory=OverallFeedback)
+    exercises: list[ExerciseFeedback] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def unique_exercise_feedback(self) -> WorkoutFeedback:
+        ids = [item.exercise_id for item in self.exercises]
+        if len(ids) != len(set(ids)):
+            raise ValueError("feedback contains duplicate exercise ids")
+        return self
+
+
+class ReconciledSession(DomainModel):
+    scheduled_date: date
+    effective_date: date
+    workout_key: str
+    workout_name: str
+    status: AttendanceStatus
+    garmin_activity_id: str | None = None
+    feedback_recorded: bool = False
+    feedback_missing: bool = False
+    reason: str | None = None
+
+
+class WeekReconciliation(DomainModel):
+    person: str
+    week_start: date
+    generated_at: datetime
+    sessions: list[ReconciledSession]
+    unscheduled_activity_ids: list[str] = Field(default_factory=list)
+
+    @property
+    def adherence(self) -> dict[str, int]:
+        result = {item.value: 0 for item in AttendanceStatus}
+        for session in self.sessions:
+            result[session.status.value] += 1
+        return result
+
+
+class WeeklySessionPlan(DomainModel):
+    scheduled_date: date
+    workout_key: str
+    workout: PlannedWorkout
+
+
+class WeeklyPlan(DomainModel):
+    person: str
+    week_start: date
+    created_at: datetime
+    source_plan_hash: str
+    sessions: list[WeeklySessionPlan]
+
+    @model_validator(mode="after")
+    def valid_week(self) -> WeeklyPlan:
+        if self.week_start.weekday() != 0:
+            raise ValueError("week_start must be a Monday")
+        keys = [item.workout_key for item in self.sessions]
+        dates = [item.scheduled_date for item in self.sessions]
+        if len(keys) != len(set(keys)):
+            raise ValueError("weekly plan contains duplicate workout keys")
+        if len(dates) != len(set(dates)):
+            raise ValueError("weekly plan contains duplicate dates")
+        week_end = self.week_start.toordinal() + 6
+        if any(
+            not self.week_start.toordinal() <= item.scheduled_date.toordinal() <= week_end
+            for item in self.sessions
+        ):
+            raise ValueError("weekly session dates must be inside the target week")
+        return self
+
+
+class CoachChangeKind(StrEnum):
+    LOAD = "load"
+    SETS = "sets"
+    REP_RANGE = "rep_range"
+    EXERCISE = "exercise"
+    SCHEDULE = "schedule"
+
+
+class CoachChangeScope(StrEnum):
+    WEEK = "week"
+    ONGOING = "ongoing"
+
+
+class CoachChangeSource(StrEnum):
+    DETERMINISTIC = "deterministic"
+    COACH = "coach"
+    USER = "user"
+
+
+class CoachChange(DomainModel):
+    kind: CoachChangeKind
+    scope: CoachChangeScope = CoachChangeScope.ONGOING
+    workout_key: str
+    exercise_id: str | None = None
+    old_value: Any
+    new_value: Any
+    rationale: str
+    evidence: list[str] = Field(default_factory=list)
+    source: CoachChangeSource = CoachChangeSource.COACH
+    requires_review: bool = False
+
+    @model_validator(mode="after")
+    def valid_target(self) -> CoachChange:
+        if self.kind == CoachChangeKind.SCHEDULE:
+            if self.exercise_id is not None:
+                raise ValueError("schedule changes cannot target an exercise")
+            if self.scope != CoachChangeScope.WEEK:
+                raise ValueError("schedule changes must be week-scoped")
+        elif self.exercise_id is None:
+            raise ValueError(f"{self.kind.value} changes require exercise_id")
+        return self
+
+
+class CoachingProposal(DomainModel):
+    person: str
+    target_week: date
+    created_at: datetime
+    base_plan_hash: str
+    review_week: WeekReconciliation
+    summary: str
+    changes: list[CoachChange]
+    questions: list[str] = Field(default_factory=list)
+    notes: list[str] = Field(default_factory=list)
+    applied_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def consistent_and_unique(self) -> CoachingProposal:
+        if self.review_week.person != self.person:
+            raise ValueError("review week person must match proposal person")
+        targets = [(item.kind, item.workout_key, item.exercise_id) for item in self.changes]
+        if len(targets) != len(set(targets)):
+            raise ValueError("coaching proposal contains duplicate change targets")
+        return self

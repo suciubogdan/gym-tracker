@@ -41,8 +41,8 @@ class GarminSyncService:
         )
         return model_hash(payload) + ":" + model_hash(hash_context)
 
-    def diff(self, person: str) -> list[GarminDiffItem]:
-        plan = self.repository.load_plan(person)
+    def diff(self, person: str, week_start: date | None = None) -> list[GarminDiffItem]:
+        plan = self.repository.effective_plan(person, week_start)
         state = self.repository.load_sync_state(person)
         remote_ids = {item.workout_id for item in self.client.list_workouts()}
         results: list[GarminDiffItem] = []
@@ -81,11 +81,17 @@ class GarminSyncService:
             )
         return results
 
-    def sync(self, person: str, *, dry_run: bool = True) -> list[GarminDiffItem]:
-        differences = self.diff(person)
+    def sync(
+        self,
+        person: str,
+        *,
+        dry_run: bool = True,
+        week_start: date | None = None,
+    ) -> list[GarminDiffItem]:
+        differences = self.diff(person, week_start)
         if dry_run:
             return differences
-        plan = self.repository.load_plan(person)
+        plan = self.repository.effective_plan(person, week_start)
         state = self.repository.load_sync_state(person)
         for item in differences:
             workout = plan.workouts[item.workout_key]
@@ -102,32 +108,41 @@ class GarminSyncService:
             )
             # Persist after each verified remote mutation to survive partial failures.
             self.repository.save_sync_state(state)
-        return self.diff(person)
+        return self.diff(person, week_start)
 
     def schedule_week(
         self, person: str, week: date, *, dry_run: bool = True
     ) -> list[dict[str, str]]:
         if week.weekday() != 0:
             raise ValueError("--week must be a Monday")
-        plan = self.repository.load_plan(person)
+        plan = self.repository.effective_plan(person, week)
         state = self.repository.load_sync_state(person)
         desired: list[tuple[date, str, str]] = []
-        for day_name, workout_key in plan.weekly_schedule.items():
-            if day_name.lower() not in WEEKDAYS:
-                raise ValueError(f"Unknown weekday {day_name!r}")
+        weekly = self.repository.load_weekly_plan(person, week)
+        if weekly:
+            schedule_items = [(item.scheduled_date, item.workout_key) for item in weekly.sessions]
+        else:
+            schedule_items = []
+            for configured_day, workout_key in plan.weekly_schedule.items():
+                if configured_day.lower() not in WEEKDAYS:
+                    raise ValueError(f"Unknown weekday {configured_day!r}")
+                schedule_items.append(
+                    (week + timedelta(days=WEEKDAYS[configured_day.lower()]), workout_key)
+                )
+        for scheduled_date, workout_key in schedule_items:
             entry = state.workouts.get(workout_key)
             if entry is None:
                 raise RuntimeError(
                     f"Workout {workout_key} has not been synced; "
-                    f"run `gym garmin sync {person}` first"
+                    f"run `gym garmin sync {person} --week {week.isoformat()} --execute` first"
                 )
-            desired.append(
-                (
-                    week + timedelta(days=WEEKDAYS[day_name.lower()]),
-                    workout_key,
-                    entry.workout_id,
+            expected_hash = self._workout_hash(plan.workouts[workout_key])
+            if entry.last_synced_hash != expected_hash:
+                raise RuntimeError(
+                    f"Workout {workout_key} does not match the target week's prescription; "
+                    f"run `gym garmin sync {person} --week {week.isoformat()} --execute` first"
                 )
-            )
+            desired.append((scheduled_date, workout_key, entry.workout_id))
 
         months = {(day.year, day.month) for day, _, _ in desired}
         existing = []

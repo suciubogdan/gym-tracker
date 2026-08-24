@@ -46,6 +46,18 @@ only a proposal; `progress apply` is the separate local mutation and must reject
 Always show the user a proposal before applying it. A request to analyze or propose is not approval
 to apply.
 
+## Coaching rules
+
+Reconcile dated plans, explicit attendance, feedback, and exact Garmin activity identity before
+coaching. Never invent subjective feedback. Missing feedback must not block the next week: use
+objective sets when present and otherwise continue unchanged. Missed workouts are attendance, not
+failed progression; partial sessions count only completed exercises.
+
+Coach changes are typed and must state week/ongoing scope, old/new values, rationale, and evidence.
+Pain, excessive difficulty, or technique breakdown suppresses automatic increases and prompts
+review, not diagnosis. Preserve deterministic progression as the baseline, manual overrides, load
+jump review flags, and exact exercise mappings. Always show a weekly proposal before local apply.
+
 ## Garmin rules
 
 - Never invent a Garmin category or exercise value. Search the installed catalog and verify the
@@ -65,7 +77,8 @@ Read-only: plan/history/status, proposal inspection, Garmin exercise search, Gar
 and dry-run schedule.
 
 Local mutations: importing normalized history, writing a proposal, applying a reviewed proposal,
-updating sync metadata after a verified operation. Explain which files change and inspect Git diff.
+recording attendance/feedback, materializing a weekly plan, and updating sync metadata after a
+verified operation. Explain which files change and inspect Git diff.
 
 External mutations: Garmin login, real sync/create/update/delete, and real scheduling. Never infer
 approval from a request to review, analyze, diff or prepare. CLI must require `--execute`; MCP must
@@ -77,4 +90,3 @@ Use `FakeGarminClient` for almost all tests. Live credentials are never a test p
 progression boundaries, introduction behavior, failed/missing sets, rounding, serialization,
 activity-id idempotency, strict exercise mapping, sync create/update/no-op/repair, replacement safety,
 schedule idempotency, and independent accounts. Run pytest, Ruff and mypy before handoff.
-

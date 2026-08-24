@@ -30,7 +30,9 @@ uv run mypy
 ```
 
 See [architecture](docs/architecture.md) for layer boundaries and
-[Garmin research](docs/garmin-research.md) for verified capabilities and uncertainty.
+[Garmin research](docs/garmin-research.md) for verified capabilities and uncertainty. The complete
+[agentic coaching workflow](docs/coaching.md) describes feedback, missed sessions, weekly snapshots,
+and the conversational coach.
 
 ## Plan and exercise format
 
@@ -125,6 +127,7 @@ Sync and scheduling default to dry-run. A real Garmin mutation requires `--execu
 ```bash
 uv run gym garmin sync bogdan                 # preview
 uv run gym garmin sync bogdan --execute       # external mutation
+uv run gym garmin sync bogdan --week 2026-08-31
 uv run gym garmin schedule bogdan --week 2026-08-31
 uv run gym garmin schedule bogdan --week 2026-08-31 --execute
 ```
@@ -137,6 +140,31 @@ mutation. Scheduling reads the calendar and skips the same workout/date pair.
 Always inspect dry-run output immediately before `--execute`. Garmin deletions are limited to the
 guarded compatibility fallback; this tool does not delete unrelated remote workouts.
 
+Garmin workouts contain exact reps and kilograms. They do not evaluate double progression on the
+watch. Base sync publishes the current recurring A/B/C/D prescriptions; after approving a dated
+weekly plan, use `--week` to publish that week's exact numbers before scheduling it.
+
+## Feedback-aware weekly coaching
+
+The optional coaching layer reconciles planned sessions, imported Garmin activity, attendance, and
+subjective feedback. Missing feedback is allowed, missed workouts are not counted as failed sets,
+and the deterministic progression engine remains the safe baseline.
+
+```bash
+uv run gym coach check-in --person bogdan
+uv run gym coach feedback bogdan --date 2026-08-24 --workout A \
+  --energy 4 --difficulty 3 --notes "Bench felt easy"
+uv run gym coach missed bogdan --date 2026-08-25 --workout B --reason "Travel"
+uv run gym coach propose bogdan --week 2026-08-31 --json
+# inspect, then explicitly apply locally:
+uv run gym coach apply bogdan --week 2026-08-31
+uv run gym garmin sync bogdan --week 2026-08-31
+```
+
+Application writes attendance and feedback under `data/`, and an approved dated snapshot under
+`weeks/<monday>/`. One-off changes stay in the week; ongoing changes also update the base plan. The
+repository-scoped `$gym-coach` skill provides the conversational layer and approval policy.
+
 ## MCP setup for Codex
 
 The MCP server wraps `GymService`; it contains no planning logic. Start it over stdio with:
@@ -145,9 +173,11 @@ The MCP server wraps `GymService`; it contains no planning logic. Start it over 
 uv run gym-mcp
 ```
 
-Configure Codex with the absolute repository working directory and command `uv run gym-mcp`. Tools:
-`get_training_plan`, `get_recent_workouts`, `get_training_status`, `propose_progression`,
-`apply_progression`, `get_garmin_diff`, `sync_plan_to_garmin`, and `schedule_week`.
+Configure Codex with the absolute repository working directory and command `uv run gym-mcp`. In
+addition to plan, progression, and Garmin tools, the server exposes confirmed history import,
+attendance/feedback, reconciliation/adherence, coaching context, pending check-ins, reviewable weekly
+proposals, and dated plan inspection. See [agentic coaching workflow](docs/coaching.md) for the full
+tool and approval flow.
 
 Mutating MCP tools require `confirm=true`. Garmin tools additionally default to `dry_run=true`.
 Import stays a CLI operation initially so credential/network diagnostics remain explicit.
@@ -186,4 +216,3 @@ uv run gym garmin sync roxana --execute
 
 Optional live smoke tests should use one disposable workout per account and proceed create → verify →
 update → verify → schedule → verify. Normal pytest uses fakes only and needs no credentials.
-

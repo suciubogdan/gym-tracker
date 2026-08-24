@@ -1,0 +1,129 @@
+# Agentic coaching workflow
+
+The coach is an optional agent layer over a deterministic local application. It gathers the user's
+subjective report, reads normalized Garmin evidence, and prepares a proposal. The application still
+works without an agent and never calls an LLM API.
+
+## What is stored
+
+- `data/attendance/<person>/<date>-<workout>.yaml`: completed, partial, missed, or rescheduled.
+- `data/feedback/<person>/<date>-<workout>.yaml`: optional overall and per-exercise feedback.
+- `data/imported/<person>/<activity-id>.yaml`: objective Garmin sets and reps.
+- `weeks/<monday>/<person>.yaml`: the approved, dated prescription for one week.
+- `data/coaching/proposals/<person>/<monday>.yaml`: ephemeral proposal awaiting review.
+
+The recurring program in `plans/<person>.yaml` remains canonical for ongoing programming. A weekly
+snapshot can override loads, sets, reps, exercises, or dates for one week without changing that base.
+An `ongoing` proposal change updates both the base and the target week; a `week` change updates only
+the dated snapshot.
+
+## Fallback behavior
+
+Evidence is deliberately allowed to be incomplete:
+
+- Imported activity, no feedback: completed sets drive deterministic progression; otherwise hold.
+- Future dated session: keep it planned; do not ask for attendance early.
+- No activity and no attendance report: mark unresolved and continue the plan unchanged.
+- Missed: record attendance; do not count it as failure and do not regress because of it.
+- Partial: completed exercises can count; skipped exercises are not treated as failed sets.
+- Pain, “too hard,” or technique breakdown: suppress an automatic increase and flag the issue.
+
+Feedback is optional. The coach may ask a short follow-up, but lack of an answer never blocks the
+next week from being prepared.
+
+## CLI workflow
+
+Import recent objective data, then see what needs a check-in:
+
+```bash
+uv run gym import --person bogdan --since 7d
+uv run gym coach check-in --person bogdan --as-of 2026-08-30
+uv run gym coach reconcile bogdan --week 2026-08-24 --json
+```
+
+Record a simple report, a missed session, or a move:
+
+```bash
+uv run gym coach feedback bogdan --date 2026-08-24 --workout A \
+  --energy 4 --difficulty 3 --recovery 4 --notes "Everything moved well"
+
+uv run gym coach feedback bogdan --date 2026-08-25 --workout B --status partial \
+  --exercise '{"exercise_id":"barbell_back_squat","status":"skipped","notes":"knee irritated"}' \
+  --pain --pain-notes "Knee discomfort"
+
+uv run gym coach missed bogdan --date 2026-08-27 --workout C --reason "Travel"
+uv run gym coach reschedule bogdan --date 2026-08-29 --workout D \
+  --to 2026-08-30 --reason "Schedule conflict"
+```
+
+Prepare, inspect, and explicitly apply the next week:
+
+```bash
+uv run gym coach context bogdan --week 2026-08-31 --json
+uv run gym coach propose bogdan --week 2026-08-31 --json
+uv run gym coach proposal bogdan --week 2026-08-31 --json
+# after review:
+uv run gym coach apply bogdan --week 2026-08-31 --json
+uv run gym coach plan bogdan --week 2026-08-31 --json
+```
+
+`coach propose` supplies the safe deterministic baseline. Through MCP, an agent can replace it with a
+validated coaching proposal containing `CoachChange` objects:
+
+```json
+{
+  "kind": "load",
+  "scope": "week",
+  "workout_key": "A",
+  "exercise_id": "barbell_bench_press",
+  "old_value": 40.0,
+  "new_value": 37.5,
+  "rationale": "One-week recovery adjustment",
+  "evidence": ["User reported poor recovery and unstable technique"],
+  "source": "coach",
+  "requires_review": false
+}
+```
+
+Kinds are `load`, `sets`, `rep_range`, `exercise`, and `schedule`. Schedule changes must be
+week-scoped and stay within the target Monday–Sunday. Exercise replacements contain a full
+prescription and require an exact configured Garmin mapping. Old values are mandatory stale-write
+guards. Excessive load jumps are converted to review flags and skipped during apply.
+
+## Garmin handoff
+
+Garmin templates contain exact numbers, not a future progression algorithm. Without `--week`, sync
+uses the recurring base plan's current minimum reps and target loads. After an approved weekly plan,
+sync that exact snapshot and then schedule it:
+
+```bash
+uv run gym garmin diff bogdan --week 2026-08-31
+uv run gym garmin sync bogdan --week 2026-08-31              # dry-run
+uv run gym garmin sync bogdan --week 2026-08-31 --execute    # explicit external write
+uv run gym garmin schedule bogdan --week 2026-08-31          # dry-run
+uv run gym garmin schedule bogdan --week 2026-08-31 --execute
+```
+
+Scheduling verifies that every remote template hash matches the target week's prescription. This
+prevents an adjusted week from accidentally using stale weights. Because A/B/C/D are maintained as
+four remote templates, prepare and sync one active week at a time before scheduling it.
+
+## Conversational and recurring check-ins
+
+The repository-scoped `$gym-coach` skill teaches Codex the evidence and approval flow. A useful
+conversation can be as short as “Workout A felt good; bench was easy, everything else on target” or
+“I missed C and want to do it Friday.” The agent records only stated facts and shows changes before
+applying them.
+
+For recurring interaction, schedule a Codex task that runs `import_recent_workouts` and
+`get_pending_checkins` after expected training days, and a weekly task that calls
+`get_coaching_context` and `propose_next_week`. Give the task permission to import normalized history,
+but keep proposal apply, Garmin sync, and Garmin schedule as approval-gated actions.
+
+## MCP tools
+
+The MCP surface includes reading plans/history, importing recent Garmin workouts with confirmation,
+recording feedback/attendance, reconciliation/adherence, coaching context, deterministic and custom
+proposal creation, proposal inspection/application, weekly plan inspection, pending check-ins, and
+week-aware Garmin diff/sync/schedule. Local apply requires `confirm=true`; external Garmin writes
+also require `dry_run=false` and `confirm=true`.

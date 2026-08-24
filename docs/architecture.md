@@ -15,6 +15,7 @@ CLI / MCP
 application services
     ├── storage repositories ── YAML / JSON files
     ├── progression engine ──── pure Pydantic domain models
+    ├── coaching service ────── reconciliation + validated weekly proposals
     └── GarminSyncService ───── GarminClient protocol
                                       ▲
                                       │
@@ -34,6 +35,9 @@ incoming activities. Tests use `FakeGarminClient`, so no test requires an accoun
 - `data/imported/<person>/<activity-id>.yaml`: normalized, inspectable completed training history.
 - `data/sync/<person>.yaml`: remote workout ids and last-synchronized content hashes.
 - `data/proposals/<person>.yaml`: ephemeral proposal, ignored by Git until explicitly desired.
+- `data/attendance/` and `data/feedback/`: structured user reports tied to planned sessions.
+- `weeks/<monday>/<person>.yaml`: approved dated snapshot; base plans remain ongoing truth.
+- `data/coaching/proposals/`: ephemeral feedback-aware proposals, ignored by Git.
 - `data/raw/`: diagnostic source responses, always ignored because they are noisy health data.
 
 Garmin ids do not enter plan files. Losing sync metadata causes a repair/create proposal, never a
@@ -56,7 +60,14 @@ after every verified remote mutation so a partial run can safely resume. The ada
 for old clients: create replacement, verify it appears, then delete the obsolete template.
 
 Scheduling requires a synchronized id, validates that `--week` is a Monday, reads existing calendar
-entries, and skips matching workout/date pairs.
+entries, and skips matching workout/date pairs. When a weekly snapshot exists, diff/sync with
+`--week` serializes its exact prescriptions and scheduling rejects stale remote hashes.
+
+Coaching reconciliation joins the dated plan, explicit attendance, optional feedback, and imported
+activities. Matching is exact by stored Garmin activity id or workout name within the planned/effective
+date window; it never fuzzily assigns health history. The deterministic engine remains the baseline.
+Agent-authored changes are typed, stale-checked, scope-checked, and safety-checked before they can be
+saved. Application is a separate action and materializes a weekly snapshot.
 
 ## Boundaries and failure policy
 
@@ -65,4 +76,4 @@ entries, and skips matching workout/date pairs.
 - Malformed or drifted Garmin payloads fail in the adapter while raw information remains available.
 - CLI Garmin sync/schedule and MCP equivalents default to preview/dry-run.
 - Local proposal application and every external mutation use separate explicit commands.
-
+- Missing subjective feedback never blocks planning; missed workouts are attendance, not failed sets.

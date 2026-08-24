@@ -10,7 +10,7 @@ htmlcov/
 dist/
 data/raw/
 data/proposals/*.yaml
+data/coaching/proposals/
 *.log
 .env
 garmin_tokens*.json
-

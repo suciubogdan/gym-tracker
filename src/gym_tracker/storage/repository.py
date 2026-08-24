@@ -3,7 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from datetime import UTC, datetime
+from calendar import day_name
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -11,11 +12,15 @@ import yaml
 from pydantic import BaseModel
 
 from gym_tracker.domain.models import (
+    AttendanceRecord,
+    CoachingProposal,
     CompletedStrengthWorkout,
     ExerciseRegistry,
     ProgressionProposal,
     SyncState,
     TrainingPlan,
+    WeeklyPlan,
+    WorkoutFeedback,
 )
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -125,3 +130,130 @@ class ProjectRepository:
                 f"No proposal for {person}; run `gym progress propose {person}`"
             )
         return ProgressionProposal.model_validate(load_yaml(path))
+
+    @staticmethod
+    def _session_filename(scheduled_date: date, workout_key: str) -> str:
+        return f"{scheduled_date.isoformat()}-{workout_key}.yaml"
+
+    def save_attendance(self, record: AttendanceRecord) -> None:
+        path = (
+            self.root
+            / "data"
+            / "attendance"
+            / record.person
+            / self._session_filename(record.scheduled_date, record.workout_key)
+        )
+        dump_yaml(path, record.model_dump(mode="json"))
+
+    def load_attendance(
+        self, person: str, scheduled_date: date, workout_key: str
+    ) -> AttendanceRecord | None:
+        path = (
+            self.root
+            / "data"
+            / "attendance"
+            / person
+            / self._session_filename(scheduled_date, workout_key)
+        )
+        if not path.exists():
+            return None
+        return AttendanceRecord.model_validate(load_yaml(path))
+
+    def attendance(self, person: str) -> list[AttendanceRecord]:
+        records = [
+            AttendanceRecord.model_validate(load_yaml(path))
+            for path in (self.root / "data" / "attendance" / person).glob("*.yaml")
+        ]
+        return sorted(records, key=lambda item: (item.scheduled_date, item.workout_key))
+
+    def save_feedback(self, feedback: WorkoutFeedback) -> None:
+        path = (
+            self.root
+            / "data"
+            / "feedback"
+            / feedback.person
+            / self._session_filename(feedback.scheduled_date, feedback.workout_key)
+        )
+        dump_yaml(path, feedback.model_dump(mode="json"))
+
+    def load_feedback(
+        self, person: str, scheduled_date: date, workout_key: str
+    ) -> WorkoutFeedback | None:
+        path = (
+            self.root
+            / "data"
+            / "feedback"
+            / person
+            / self._session_filename(scheduled_date, workout_key)
+        )
+        if not path.exists():
+            return None
+        return WorkoutFeedback.model_validate(load_yaml(path))
+
+    def feedback(self, person: str) -> list[WorkoutFeedback]:
+        records = [
+            WorkoutFeedback.model_validate(load_yaml(path))
+            for path in (self.root / "data" / "feedback" / person).glob("*.yaml")
+        ]
+        return sorted(records, key=lambda item: (item.scheduled_date, item.workout_key))
+
+    def weekly_plan_path(self, person: str, week_start: date) -> Path:
+        return self.root / "weeks" / week_start.isoformat() / f"{person}.yaml"
+
+    def save_weekly_plan(self, plan: WeeklyPlan) -> None:
+        dump_yaml(
+            self.weekly_plan_path(plan.person, plan.week_start),
+            plan.model_dump(mode="json"),
+        )
+
+    def load_weekly_plan(self, person: str, week_start: date) -> WeeklyPlan | None:
+        path = self.weekly_plan_path(person, week_start)
+        if not path.exists():
+            return None
+        return WeeklyPlan.model_validate(load_yaml(path))
+
+    def effective_plan(self, person: str, week_start: date | None = None) -> TrainingPlan:
+        base = self.load_plan(person)
+        if week_start is None:
+            return base
+        weekly = self.load_weekly_plan(person, week_start)
+        if weekly is None:
+            return base
+        schedule = {
+            day_name[item.scheduled_date.weekday()].lower(): item.workout_key
+            for item in weekly.sessions
+        }
+        return base.model_copy(
+            update={
+                "schedule": {"workouts_per_week": len(weekly.sessions)},
+                "weekly_schedule": schedule,
+                "workouts": {
+                    item.workout_key: item.workout.model_copy(deep=True) for item in weekly.sessions
+                },
+            }
+        )
+
+    def coaching_proposal_path(self, person: str, target_week: date) -> Path:
+        return (
+            self.root
+            / "data"
+            / "coaching"
+            / "proposals"
+            / person
+            / f"{target_week.isoformat()}.yaml"
+        )
+
+    def save_coaching_proposal(self, proposal: CoachingProposal) -> None:
+        dump_yaml(
+            self.coaching_proposal_path(proposal.person, proposal.target_week),
+            proposal.model_dump(mode="json"),
+        )
+
+    def load_coaching_proposal(self, person: str, target_week: date) -> CoachingProposal:
+        path = self.coaching_proposal_path(person, target_week)
+        if not path.exists():
+            raise FileNotFoundError(
+                f"No coaching proposal for {person} and {target_week}; "
+                f"run `gym coach propose {person} --week {target_week}`"
+            )
+        return CoachingProposal.model_validate(load_yaml(path))
