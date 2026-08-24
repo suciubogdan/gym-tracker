@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 
 from gym_tracker.domain.models import (
     ActivitySummary,
     CompletedStrengthWorkout,
+    DailyRecoverySnapshot,
     GarminWorkout,
     GarminWorkoutRef,
     PlannedWorkout,
@@ -15,9 +16,11 @@ from gym_tracker.domain.models import (
 class FakeGarminClient:
     """In-memory Garmin port for deterministic unit tests."""
 
-    def __init__(self) -> None:
+    def __init__(self, person: str = "bogdan") -> None:
+        self.person = person
         self.workouts: dict[str, GarminWorkout] = {}
         self.activities: dict[str, CompletedStrengthWorkout] = {}
+        self.recovery: dict[date, DailyRecoverySnapshot] = {}
         self.scheduled: dict[tuple[str, date], ScheduledWorkout] = {}
         self.create_calls = 0
         self.replace_calls = 0
@@ -75,5 +78,24 @@ class FakeGarminClient:
             if start <= item.started_at.date() <= end
         ]
 
-    def get_strength_activity(self, activity_id: str) -> CompletedStrengthWorkout:
+    def get_strength_activity(
+        self, activity_id: str, summary: ActivitySummary | None = None
+    ) -> CompletedStrengthWorkout:
         return self.activities[activity_id]
+
+    def get_daily_recovery(self, calendar_date: date) -> DailyRecoverySnapshot:
+        return self.recovery.get(
+            calendar_date,
+            DailyRecoverySnapshot(
+                person=self.person,
+                calendar_date=calendar_date,
+                imported_at=datetime.now(UTC),
+                unavailable_sources=[
+                    "training_status",
+                    "training_readiness",
+                    "hrv",
+                    "sleep",
+                    "body_battery",
+                ],
+            ),
+        )

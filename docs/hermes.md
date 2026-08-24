@@ -10,6 +10,7 @@ Use a private Git remote. These paths are intentionally portable and may be comm
 
 - `plans/` and `config/`: ongoing program and deterministic policy.
 - `data/imported/`: normalized completed Garmin sets.
+- `data/imported/<person>/daily/`: normalized Garmin recovery snapshots used by coaching.
 - `data/attendance/` and `data/feedback/`: personal reports.
 - `data/sync/`: account-specific Garmin workout IDs and content hashes; these are identifiers, not
   login credentials.
@@ -58,6 +59,14 @@ but omits the older direct progression-apply tools. Mutations are still guarded:
 proposal application require `confirm=true`; Garmin writes require both `dry_run=false` and
 `confirm=true`.
 
+The project skill gives Hermes standing authorization to call
+`mcp_gym_tracker_refresh_coaching_data(confirm=true, days=7)` at the start of every coaching,
+check-in, reconciliation, or progression conversation. The call reads recent Garmin activities and
+today's recovery metrics, writes only normalized local history, and returns the deterministic
+recovery assessment with current coaching evidence. You should not need to ask Hermes to sync first
+or fetch recovery separately. This is separate from outbound Garmin template sync and scheduling,
+which remain previewed and explicitly approval-gated.
+
 ## Connect WhatsApp
 
 Run the guided setup and select WhatsApp:
@@ -87,6 +96,11 @@ From WhatsApp, messages such as these should activate the project skill:
 - “Review this week and propose next week.”
 - “Show me the Garmin dry-run for next week.”
 - “Schedule only Home A today.”
+
+Before responding to the first four coaching examples, Hermes must refresh Garmin activity and
+recovery evidence even when the message does not mention Garmin or synchronization. An activity
+refresh error must be surfaced; optional unavailable recovery sources are shown as partial data.
+Hermes must not silently use stale history as if it were current.
 
 For a home request, the agent reads the configured location inventory and proposes the matching
 week-only A/B/C/D variant. It must show a proposal before applying it and must separately preview

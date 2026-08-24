@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -13,6 +13,7 @@ from gym_tracker.domain.models import (
     CompletedExercise,
     CompletedSet,
     CompletedStrengthWorkout,
+    DailyRecoverySnapshot,
     ExerciseFeedback,
     OverallFeedback,
     PerceivedDifficulty,
@@ -162,6 +163,37 @@ def test_pain_feedback_suppresses_an_otherwise_valid_increase(
         for item in proposal.changes
     )
     assert any("reported pain" in note for note in proposal.notes)
+
+
+def test_garmin_recovery_caution_suppresses_increase_without_reducing_load(
+    repository: ProjectRepository,
+) -> None:
+    target_week = date(2026, 8, 31)
+    assessment_date = min(date.today(), target_week - timedelta(days=1))
+    repository.save_completed(_bench_session("one", datetime(2026, 8, 20, tzinfo=UTC)))
+    repository.save_completed(_bench_session("two", datetime(2026, 8, 24, tzinfo=UTC)))
+    repository.save_recovery(
+        DailyRecoverySnapshot(
+            person="bogdan",
+            calendar_date=assessment_date,
+            imported_at=datetime.now(UTC),
+            sleep_score=55,
+            body_battery_at_wake=30,
+            available_sources=["sleep", "body_battery"],
+        )
+    )
+
+    coach = CoachingService(repository)
+    context = coach.get_context("bogdan", target_week)
+    proposal = coach.propose_week("bogdan", target_week)
+
+    assert context["recovery"]["assessment"]["state"] == "caution"
+    assert not any(
+        item.workout_key == "A" and item.exercise_id == "barbell_bench_press"
+        for item in proposal.changes
+    )
+    assert any("Garmin recovery was caution" in note for note in proposal.notes)
+    assert "suppressed 1 increase(s)" in proposal.summary
 
 
 def test_week_scoped_change_updates_snapshot_but_not_base_plan(

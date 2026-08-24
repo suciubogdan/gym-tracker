@@ -24,6 +24,7 @@ from gym_tracker.domain.progression import ProgressionSettings, apply_changes, p
 from gym_tracker.garmin.adapter import GarminConnectAdapter
 from gym_tracker.garmin.importer import import_recent
 from gym_tracker.garmin.protocol import GarminClient
+from gym_tracker.garmin.recovery import import_daily_recovery
 from gym_tracker.garmin.sync import GarminSyncService
 from gym_tracker.storage.repository import ProjectRepository, model_hash
 
@@ -116,6 +117,27 @@ class GymService:
 
     def import_workouts(self, person: str, days: int = 7) -> dict[str, int]:
         return import_recent(self.repository, self.client_factory(person), person, days)
+
+    def refresh_coaching_data(
+        self, person: str, *, week: date, as_of: date, days: int = 7
+    ) -> dict[str, Any]:
+        """Import Garmin activity and recovery data before returning coaching evidence."""
+        client = self.client_factory(person)
+        imported = import_recent(self.repository, client, person, days)
+        recovery_import = import_daily_recovery(self.repository, client, person, as_of)
+        reconciliation = self.reconcile_week(person, week)
+        return {
+            "person": person,
+            "import_window_days": days,
+            "import": imported,
+            "recovery_import": recovery_import,
+            "recovery_assessment": self.get_recovery_context(person, as_of),
+            "reconciliation": reconciliation.model_dump(mode="json"),
+            "pending_checkins": self.get_pending_checkins(person, as_of),
+        }
+
+    def get_recovery_context(self, person: str, as_of: date) -> dict[str, Any]:
+        return self._coach().get_recovery_context(person, as_of)
 
     def record_workout_feedback(
         self,

@@ -34,6 +34,7 @@ incoming activities. Tests use `FakeGarminClient`, so no test requires an accoun
 - `config/locations.yaml`: available equipment, venue constraints, and person-specific limitations.
 - `config/progression.yaml`: deterministic progression and safety policy.
 - `data/imported/<person>/<activity-id>.yaml`: normalized, inspectable completed training history.
+- `data/imported/<person>/daily/<date>.yaml`: normalized Garmin recovery context and availability.
 - `data/sync/<person>.yaml`: remote workout ids and last-synchronized content hashes.
 - `data/proposals/<person>.yaml`: ephemeral proposal, ignored by Git until explicitly desired.
 - `data/attendance/` and `data/feedback/`: structured user reports tied to planned sessions.
@@ -49,7 +50,13 @@ blind name match or deletion.
 Import first lists activities for a bounded date range, filters strength activities, reads the
 dedicated exercise-set document, requires every Garmin category/name pair to map internally, writes
 a sanitized raw diagnostic record, and atomically writes one normalized file per activity id.
-Existing activity files are skipped before a detail request, making imports idempotent.
+Existing activity files are skipped before a detail request, making imports idempotent. The validated
+activity-list summary is passed into detail normalization because Garmin detail responses may omit
+or malform start time, name, duration, heart rate, or activity type; detail values win when usable.
+The agent-facing refresh also reads the current day's Training Status/load, Training Readiness, HRV,
+sleep, resting heart rate, and Body Battery through the same account client. Only a bounded daily
+snapshot is portable; endpoint payloads remain ignored raw diagnostics. Optional unsupported sources
+are recorded as unavailable instead of blocking completed-activity import.
 
 Progression reads the plan and history and produces a proposal tied to a hash of the input plan.
 Apply refuses a stale proposal. The introductory phase requires repeated upper-bound success. Load
@@ -82,6 +89,11 @@ Agent-authored changes are typed, stale-checked, scope-checked, and safety-check
 saved. Application is a separate action and materializes a weekly snapshot. A location change
 replaces only the selected dated A/B/C/D session with its configured variant; it does not rewrite
 the recurring gym program. Distinct workout names keep home evidence out of gym load progression.
+The agent-facing `refresh_coaching_data` application operation always runs the bounded Garmin import
+and daily recovery normalization before returning recovery assessment, reconciliation, and pending
+check-ins, so the conversational protocol has one ordered entry point and cannot accidentally
+present pre-import evidence as current. Recovery assessment is pure and threshold-driven. It may
+suppress an increase or request review, but it cannot create an increase or apply a reduction.
 
 ## Boundaries and failure policy
 

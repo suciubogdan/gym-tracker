@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from gym_tracker.domain.models import CompletedStrengthWorkout
+from gym_tracker.domain.models import ActivitySummary, CompletedStrengthWorkout
 from gym_tracker.garmin.fake import FakeGarminClient
 from gym_tracker.garmin.importer import import_recent
 from gym_tracker.storage.repository import ProjectRepository
@@ -12,10 +12,14 @@ class CountingFake(FakeGarminClient):
     def __init__(self) -> None:
         super().__init__()
         self.detail_calls = 0
+        self.received_summary: ActivitySummary | None = None
 
-    def get_strength_activity(self, activity_id: str) -> CompletedStrengthWorkout:
+    def get_strength_activity(
+        self, activity_id: str, summary: ActivitySummary | None = None
+    ) -> CompletedStrengthWorkout:
         self.detail_calls += 1
-        return super().get_strength_activity(activity_id)
+        self.received_summary = summary
+        return super().get_strength_activity(activity_id, summary)
 
 
 def test_import_workflow_skips_existing_id_before_detail_request(
@@ -35,6 +39,8 @@ def test_import_workflow_skips_existing_id_before_detail_request(
     assert first == {"imported": 1, "skipped": 0}
     assert second == {"imported": 0, "skipped": 1}
     assert client.detail_calls == 1
+    assert client.received_summary is not None
+    assert client.received_summary.activity_id == "77"
     assert (repository.root / "data" / "raw" / "bogdan" / "77.json").exists()
 
 

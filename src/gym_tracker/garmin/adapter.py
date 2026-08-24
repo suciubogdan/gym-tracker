@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
@@ -13,6 +13,7 @@ from gym_tracker.domain.models import (
     CompletedExercise,
     CompletedSet,
     CompletedStrengthWorkout,
+    DailyRecoverySnapshot,
     ExerciseRegistry,
     GarminWorkout,
     GarminWorkoutRef,
@@ -70,6 +71,55 @@ def _walk_objects(value: Any) -> Iterable[dict[str, Any]]:
             yield from _walk_objects(nested)
 
 
+def _nested(value: Any, *keys: str) -> Any:
+    current = value
+    for key in keys:
+        if not isinstance(current, dict):
+            return None
+        current = current.get(key)
+    return current
+
+
+def _number(value: Any) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value)
+
+
+def _integer(value: Any) -> int | None:
+    number = _number(value)
+    return int(number) if number is not None else None
+
+
+def _text(value: Any) -> str | None:
+    return str(value) if value is not None and str(value).strip() else None
+
+
+def _primary_device_entry(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    candidates = [item for item in value.values() if isinstance(item, dict)]
+    if not candidates:
+        return {}
+    return next(
+        (item for item in candidates if item.get("primaryTrainingDevice") is True),
+        candidates[0],
+    )
+
+
+def _last_series_value(value: Any, *, item_key: str | None = None) -> int | None:
+    if not isinstance(value, list):
+        return None
+    for item in reversed(value):
+        candidate = item.get(item_key) if item_key and isinstance(item, dict) else item
+        if isinstance(candidate, list) and len(candidate) >= 2:
+            candidate = candidate[1]
+        parsed = _integer(candidate)
+        if parsed is not None:
+            return parsed
+    return None
+
+
 class GarminConnectAdapter:
     """Thin adapter over unofficial, unsupported Garmin consumer endpoints."""
 
@@ -78,6 +128,7 @@ class GarminConnectAdapter:
         self.registry = registry
         self.api = api
         self._raw_activities: dict[str, dict[str, Any]] = {}
+        self._raw_recovery: dict[str, dict[str, Any]] = {}
 
     @classmethod
     def from_persisted_tokens(cls, person: str, registry: ExerciseRegistry) -> GarminConnectAdapter:
@@ -188,11 +239,14 @@ class GarminConnectAdapter:
             )
         return summaries
 
-    def get_strength_activity(self, activity_id: str) -> CompletedStrengthWorkout:
-        summary = self.api.get_activity(activity_id)
+    def get_strength_activity(
+        self, activity_id: str, summary: ActivitySummary | None = None
+    ) -> CompletedStrengthWorkout:
+        detail = self.api.get_activity(activity_id)
         sets_payload = self.api.get_activity_exercise_sets(activity_id)
         self._raw_activities[activity_id] = {
-            "activity": summary,
+            "activity_list_summary": summary.model_dump(mode="json") if summary else None,
+            "activity": detail,
             "exercise_sets": sets_payload,
         }
         reverse = self.registry.reverse_garmin()
@@ -228,20 +282,40 @@ class GarminConnectAdapter:
                     duration_seconds=raw_set.get("duration"),
                 )
             )
-        started = summary.get("startTimeGMT") or summary.get("startTimeLocal")
+        detail_started = detail.get("startTimeGMT") or detail.get("startTimeLocal")
+        if detail_started is not None:
+            try:
+                started_at = _parse_datetime(detail_started)
+            except ValueError:
+                if summary is None:
+                    raise
+                started_at = summary.started_at
+        elif summary is not None:
+            started_at = summary.started_at
+        else:
+            started_at = _parse_datetime(None)
         return CompletedStrengthWorkout(
             person=self.person,
             garmin_activity_id=activity_id,
-            started_at=_parse_datetime(started),
-            workout_name=summary.get("activityName"),
-            duration_seconds=summary.get("duration"),
-            average_heart_rate=summary.get("averageHR"),
+            started_at=started_at,
+            workout_name=detail.get("activityName") or (summary.name if summary else None),
+            duration_seconds=(
+                detail.get("duration")
+                if detail.get("duration") is not None
+                else (summary.duration_seconds if summary else None)
+            ),
+            average_heart_rate=(
+                detail.get("averageHR")
+                if detail.get("averageHR") is not None
+                else (summary.average_heart_rate if summary else None)
+            ),
             exercises=[
                 CompletedExercise(exercise_id=key, sets=value) for key, value in grouped.items()
             ],
             imported_at=datetime.now(UTC),
             source_summary={
-                "activity_type": _activity_type(summary),
+                "activity_type": _activity_type(detail)
+                or (summary.activity_type if summary else None),
                 "set_count": sum(len(value) for value in grouped.values()),
             },
         )
@@ -249,6 +323,107 @@ class GarminConnectAdapter:
     def raw_activity_payload(self, activity_id: str) -> dict[str, Any]:
         """Return the last fetched raw response for ignored diagnostic storage."""
         return self._raw_activities.get(activity_id, {})
+
+    def get_daily_recovery(self, calendar_date: date) -> DailyRecoverySnapshot:
+        date_value = calendar_date.isoformat()
+        payloads: dict[str, Any] = {}
+        unavailable: list[str] = []
+        calls: dict[str, Callable[[], Any]] = {
+            "training_status": lambda: self.api.get_training_status(date_value),
+            "training_readiness": lambda: self.api.get_morning_training_readiness(date_value),
+            "hrv": lambda: self.api.get_hrv_data(date_value),
+            "sleep": lambda: self.api.get_sleep_data(date_value),
+            "body_battery": lambda: self.api.get_body_battery(date_value),
+        }
+        for source, call in calls.items():
+            try:
+                payload = call()
+            except Exception as exc:  # Garmin endpoints differ by device and firmware.
+                logger.warning(
+                    "garmin_recovery_source_unavailable",
+                    person=self.person,
+                    source=source,
+                    error_type=type(exc).__name__,
+                )
+                payload = None
+                unavailable.append(f"{source}:{type(exc).__name__}")
+            else:
+                if not payload:
+                    unavailable.append(source)
+            payloads[source] = payload
+
+        training_status = payloads["training_status"]
+        status_entry = _primary_device_entry(
+            _nested(training_status, "mostRecentTrainingStatus", "latestTrainingStatusData")
+        )
+        load = _nested(status_entry, "acuteTrainingLoadDTO") or {}
+        balance_entry = _primary_device_entry(
+            _nested(
+                training_status,
+                "mostRecentTrainingLoadBalance",
+                "metricsTrainingLoadBalanceDTOMap",
+            )
+        )
+        vo2 = _nested(training_status, "mostRecentVO2Max", "generic") or {}
+
+        readiness = payloads["training_readiness"] or {}
+        if isinstance(readiness, list):
+            readiness = readiness[0] if readiness else {}
+
+        hrv = payloads["hrv"] or {}
+        hrv_summary = _nested(hrv, "hrvSummary") or {}
+        hrv_baseline = _nested(hrv_summary, "baseline") or {}
+
+        sleep = payloads["sleep"] or {}
+        sleep_daily = _nested(sleep, "dailySleepDTO") or {}
+        sleep_scores = _nested(sleep_daily, "sleepScores") or {}
+
+        body_battery = payloads["body_battery"] or []
+        battery_entry = (
+            body_battery[0]
+            if isinstance(body_battery, list) and body_battery and isinstance(body_battery[0], dict)
+            else {}
+        )
+        available = [source for source, payload in payloads.items() if payload]
+        self._raw_recovery[date_value] = {
+            "calendar_date": date_value,
+            "sources": payloads,
+            "unavailable_sources": unavailable,
+        }
+
+        return DailyRecoverySnapshot(
+            person=self.person,
+            calendar_date=calendar_date,
+            imported_at=datetime.now(UTC),
+            training_status=_text(status_entry.get("trainingStatusFeedbackPhrase")),
+            acute_training_load=_number(load.get("dailyTrainingLoadAcute")),
+            training_load_status=_text(load.get("acwrStatus")),
+            training_load_balance=_text(balance_entry.get("trainingBalanceFeedbackPhrase")),
+            vo2_max=_number(vo2.get("vo2MaxPreciseValue") or vo2.get("vo2MaxValue")),
+            readiness_score=_integer(readiness.get("score")),
+            readiness_level=_text(readiness.get("level")),
+            recovery_time_minutes=_integer(readiness.get("recoveryTime")),
+            hrv_status=_text(hrv_summary.get("status") or sleep.get("hrvStatus")),
+            overnight_hrv_ms=_number(
+                hrv_summary.get("lastNightAvg") or sleep.get("avgOvernightHrv")
+            ),
+            hrv_baseline_low_ms=_number(hrv_baseline.get("balancedLow")),
+            hrv_baseline_high_ms=_number(hrv_baseline.get("balancedUpper")),
+            sleep_score=_integer(_nested(sleep_scores, "overall", "value")),
+            sleep_seconds=_integer(sleep_daily.get("sleepTimeSeconds")),
+            resting_heart_rate=_integer(sleep.get("restingHeartRate")),
+            body_battery_at_wake=_last_series_value(
+                sleep.get("sleepBodyBattery"), item_key="value"
+            ),
+            body_battery_current=_last_series_value(battery_entry.get("bodyBatteryValuesArray")),
+            body_battery_change=_integer(sleep.get("bodyBatteryChange")),
+            available_sources=available,
+            unavailable_sources=unavailable,
+        )
+
+    def raw_recovery_payload(self, calendar_date: date) -> dict[str, Any]:
+        """Return the last fetched raw recovery response for ignored diagnostics."""
+        return self._raw_recovery.get(calendar_date.isoformat(), {})
 
 
 def search_exercise_catalog(term: str) -> list[dict[str, str]]:

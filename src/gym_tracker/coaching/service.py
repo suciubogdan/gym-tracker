@@ -5,6 +5,7 @@ from copy import deepcopy
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
+from gym_tracker.coaching.recovery import RecoverySettings, assess_recovery
 from gym_tracker.domain.models import (
     AttendanceRecord,
     AttendanceStatus,
@@ -20,6 +21,8 @@ from gym_tracker.domain.models import (
     PlannedWorkout,
     ProgressionAction,
     ReconciledSession,
+    RecoveryAssessment,
+    RecoveryState,
     TechniqueQuality,
     TrainingPlan,
     WeeklyPlan,
@@ -67,6 +70,19 @@ class CoachingService:
         return self.repository.load_weekly_plan(person, week_start) or self.build_weekly_plan(
             person, week_start
         )
+
+    def _recovery_evidence(self, person: str, as_of: date) -> RecoveryAssessment:
+        snapshots = self.repository.recovery(person, start=as_of - timedelta(days=6), end=as_of)
+        settings = RecoverySettings(**self.repository.load_recovery_settings())
+        return assess_recovery(person, snapshots, settings, as_of=as_of)
+
+    def get_recovery_context(self, person: str, as_of: date) -> dict[str, Any]:
+        snapshots = self.repository.recovery(person, start=as_of - timedelta(days=6), end=as_of)
+        assessment = self._recovery_evidence(person, as_of)
+        return {
+            "assessment": assessment.model_dump(mode="json"),
+            "snapshots": [item.model_dump(mode="json") for item in snapshots],
+        }
 
     def validate_session(
         self, person: str, workout_key: str, scheduled_date: date | None = None
@@ -274,6 +290,7 @@ class CoachingService:
             self.repository.history(person),
             settings,
         )
+        recovery_as_of = min(date.today(), target_week - timedelta(days=1))
         return {
             "person": person,
             "target_week": target_week.isoformat(),
@@ -282,11 +299,16 @@ class CoachingService:
             "adherence": reconciliation.adherence,
             "feedback": [item.model_dump(mode="json") for item in recent_feedback],
             "deterministic_progression": [item.model_dump(mode="json") for item in progression],
+            "recovery": self.get_recovery_context(person, recovery_as_of),
             "fallback_policy": {
                 "completed_without_feedback": "use objective data and otherwise continue",
                 "no_activity_or_feedback": "leave unresolved and continue unchanged",
                 "missed": "do not count as failed progression",
                 "partial": "completed exercises count; skipped exercises are not failed sets",
+                "recovery": (
+                    "good recovery never increases load; caution/review suppresses increases; "
+                    "missing recovery continues unchanged"
+                ),
             },
         }
 
@@ -326,9 +348,12 @@ class CoachingService:
             self.repository.history(person),
             settings,
         )
+        recovery_as_of = min(date.today(), target_week - timedelta(days=1))
+        recovery = self._recovery_evidence(person, recovery_as_of)
         changes: list[CoachChange] = []
         questions: list[str] = []
         notes: list[str] = []
+        recovery_suppressed = 0
         for item in progression:
             hazards = self._feedback_hazards(feedback, item.workout_key, item.exercise_id)
             if hazards and item.action == ProgressionAction.INCREASE:
@@ -336,6 +361,9 @@ class CoachingService:
                     f"Suppressed {item.workout_key}/{item.exercise_id} increase: "
                     + "; ".join(hazards)
                 )
+                continue
+            if recovery.suppress_increases and item.action == ProgressionAction.INCREASE:
+                recovery_suppressed += 1
                 continue
             if item.action in {ProgressionAction.INCREASE, ProgressionAction.REGRESS}:
                 changes.append(
@@ -357,6 +385,17 @@ class CoachingService:
                     f"Manual review required for {item.workout_key}/{item.exercise_id}: "
                     f"{item.reason}"
                 )
+        if recovery_suppressed:
+            evidence = "; ".join(recovery.signals) or recovery.recommendation
+            notes.append(
+                f"Suppressed {recovery_suppressed} load increase(s) because Garmin recovery was "
+                f"{recovery.state.value} on {recovery.as_of.isoformat()}: {evidence}"
+            )
+        if recovery.state == RecoveryState.REVIEW:
+            questions.append(
+                "Garmin recovery has multiple or persistent degraded signals. How do you feel "
+                "before we consider a week-only volume or load reduction?"
+            )
         for session in reconciliation.sessions:
             if session.feedback_missing:
                 questions.append(
@@ -384,8 +423,9 @@ class CoachingService:
             base_plan_hash=model_hash(plan),
             review_week=reconciliation,
             summary=(
-                f"Prepared {len(changes)} deterministic change(s); missing feedback leaves "
-                "the remaining plan unchanged."
+                f"Prepared {len(changes)} deterministic change(s) and suppressed "
+                f"{recovery_suppressed} increase(s) for recovery; missing feedback leaves the "
+                "remaining plan unchanged."
             ),
             changes=changes,
             questions=questions,

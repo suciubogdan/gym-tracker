@@ -29,6 +29,11 @@ unsupported and isolates it behind `GarminClient`.
 | Activity range | `get_activities_by_date` | Client-side filtering accepts only strength types |
 | Strength sets | `get_activity_exercise_sets(id)` | Normalize active sets; ignore rest sets |
 | Activity details | `get_activity`, `get_activity_details` | Summary supplies name/time/duration/heart rate |
+| Training status/load | `get_training_status(date)` | Normalize status/load as context only |
+| Training readiness | `get_morning_training_readiness(date)` | Optional; score and recovery time when present |
+| HRV | `get_hrv_data(date)` | Normalize last-night value, status and personal baseline |
+| Sleep/recovery | `get_sleep_data(date)` | Normalize score, duration, resting HR and wake battery |
+| Body Battery | `get_body_battery(date)` | Normalize the latest daily value as context |
 
 The relevant maintained source is visible in the library's
 [`Garmin` implementation](https://github.com/cyberjunky/python-garminconnect/blob/master/garminconnect/__init__.py),
@@ -63,6 +68,18 @@ The completed strength endpoint returns an envelope resembling:
 `REST` entries are not working sets. Completed-set `weight` is observed in grams and normalized to
 kilograms. `exerciseSets` may be a list or a single object. The original activity id is the local
 idempotency key.
+
+Observed live behavior on 2026-08-24 showed that `get_activities_by_date` returned a valid
+`startTimeGMT`, while `get_activity` for the same strength activity omitted both start-time fields.
+Import therefore carries the already validated list summary into detail normalization and uses it as
+a metadata fallback. Exercise sets still come from the dedicated set endpoint, and an activity with
+no usable timestamp in either source fails loudly.
+
+The same live account returned Training Status/load, HRV, sleep and Body Battery on 2026-08-24 but
+no morning Training Readiness record. Recovery normalization therefore treats every wellness source
+as optional and reports source availability. Training Status is retained as context because its
+VO2-max/aerobic-load emphasis is not a strength-load prescription. Readiness, HRV, sleep and wake
+Body Battery feed a conservative deterministic assessment; none can independently add load.
 
 ## Template identity
 

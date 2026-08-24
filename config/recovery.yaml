@@ -1,0 +1,12 @@
+readiness_caution_below: 50
+readiness_review_below: 25
+sleep_caution_below: 60
+sleep_review_below: 40
+body_battery_caution_below: 35
+body_battery_review_below: 20
+hrv_degraded_statuses: [low, unbalanced, poor]
+degraded_signals_for_caution: 2
+degraded_signals_for_review: 3
+severe_signals_for_review: 2
+persistent_days_for_review: 2
+max_snapshot_age_days: 1

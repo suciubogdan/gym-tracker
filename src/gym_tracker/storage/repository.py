@@ -15,6 +15,7 @@ from gym_tracker.domain.models import (
     AttendanceRecord,
     CoachingProposal,
     CompletedStrengthWorkout,
+    DailyRecoverySnapshot,
     ExerciseRegistry,
     LocationRegistry,
     ProgressionProposal,
@@ -79,6 +80,9 @@ class ProjectRepository:
     def load_progression_settings(self) -> dict[str, Any]:
         return dict(load_yaml(self.root / "config" / "progression.yaml"))
 
+    def load_recovery_settings(self) -> dict[str, Any]:
+        return dict(load_yaml(self.root / "config" / "recovery.yaml"))
+
     def load_locations(self) -> LocationRegistry:
         return LocationRegistry.model_validate(load_yaml(self.root / "config" / "locations.yaml"))
 
@@ -102,8 +106,43 @@ class ProjectRepository:
         dump_yaml(path, workout.model_dump(mode="json"))
         return True
 
+    def recovery_path(self, person: str, calendar_date: date) -> Path:
+        return (
+            self.root / "data" / "imported" / person / "daily" / f"{calendar_date.isoformat()}.yaml"
+        )
+
+    def save_recovery(self, snapshot: DailyRecoverySnapshot) -> bool:
+        path = self.recovery_path(snapshot.person, snapshot.calendar_date)
+        if path.exists():
+            existing = DailyRecoverySnapshot.model_validate(load_yaml(path))
+            comparable = {"imported_at"}
+            if existing.model_dump(exclude=comparable) == snapshot.model_dump(exclude=comparable):
+                return False
+        dump_yaml(path, snapshot.model_dump(mode="json"))
+        return True
+
+    def recovery(
+        self, person: str, *, start: date | None = None, end: date | None = None
+    ) -> list[DailyRecoverySnapshot]:
+        items = [
+            DailyRecoverySnapshot.model_validate(load_yaml(path))
+            for path in (self.root / "data" / "imported" / person / "daily").glob("*.yaml")
+        ]
+        if start is not None:
+            items = [item for item in items if item.calendar_date >= start]
+        if end is not None:
+            items = [item for item in items if item.calendar_date <= end]
+        return sorted(items, key=lambda item: item.calendar_date)
+
     def save_raw(self, person: str, activity_id: str, payload: dict[str, Any]) -> None:
         path = self.root / "data" / "raw" / person / f"{activity_id}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(".json.tmp")
+        temporary.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+        temporary.replace(path)
+
+    def save_raw_recovery(self, person: str, calendar_date: date, payload: dict[str, Any]) -> None:
+        path = self.root / "data" / "raw" / person / "daily" / f"{calendar_date.isoformat()}.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         temporary = path.with_suffix(".json.tmp")
         temporary.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")

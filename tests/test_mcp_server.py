@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import date
+from datetime import UTC, date, datetime
 
 import pytest
 
 import gym_tracker.mcp_server as mcp_server
+from gym_tracker.domain.models import CompletedStrengthWorkout
 from gym_tracker.garmin.fake import FakeGarminClient
 from gym_tracker.services import GymService
 from gym_tracker.storage.repository import ProjectRepository
@@ -16,7 +17,9 @@ def test_coaching_tools_are_registered() -> None:
     names = {tool.name for tool in tools}
     assert {
         "get_training_plan",
+        "get_recovery_context",
         "import_recent_workouts",
+        "refresh_coaching_data",
         "get_training_locations",
         "record_workout_feedback",
         "mark_workout_missed",
@@ -39,6 +42,9 @@ def test_coaching_tools_are_registered() -> None:
 
 def test_mcp_mutations_require_confirmation_before_service_access() -> None:
     assert mcp_server.import_recent_workouts("bogdan")["imported"] is False
+    assert (
+        mcp_server.refresh_coaching_data("bogdan", "2026-08-24", "2026-08-24")["refreshed"] is False
+    )
     assert mcp_server.apply_week_proposal("bogdan", "2026-08-31")["applied"] is False
     with pytest.raises(ValueError, match="requires confirm=true"):
         mcp_server.sync_plan_to_garmin("bogdan", dry_run=False)
@@ -46,6 +52,35 @@ def test_mcp_mutations_require_confirmation_before_service_access() -> None:
         mcp_server.schedule_session("bogdan", "2026-08-31", "A", dry_run=False)
     with pytest.raises(ValueError, match="requires confirm=true"):
         mcp_server.schedule_week("bogdan", "2026-08-31", dry_run=False)
+
+
+def test_refresh_coaching_data_imports_before_returning_evidence(
+    repository: ProjectRepository, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client = FakeGarminClient()
+    client.activities["activity-a"] = CompletedStrengthWorkout(
+        person="bogdan",
+        garmin_activity_id="activity-a",
+        started_at=datetime(2026, 8, 24, 12, tzinfo=UTC),
+        workout_name="Bogdan Full Body A",
+        exercises=[],
+        imported_at=datetime(2026, 8, 24, 13, tzinfo=UTC),
+    )
+    service = GymService(repository, client_factory=lambda person: client)
+    monkeypatch.setattr(mcp_server, "_service", lambda: service)
+
+    result = mcp_server.refresh_coaching_data("bogdan", "2026-08-24", "2026-08-24", confirm=True)
+
+    assert result["refreshed"] is True
+    assert result["result"]["import"] == {"imported": 1, "skipped": 0}
+    assert result["result"]["import_window_days"] == 7
+    assert result["result"]["recovery_import"]["updated"] is True
+    assert result["result"]["recovery_assessment"]["assessment"]["state"] == "unknown"
+    assert result["result"]["reconciliation"]["week_start"] == "2026-08-24"
+    assert result["result"]["reconciliation"]["sessions"][0]["status"] == "completed"
+    assert result["result"]["reconciliation"]["sessions"][0]["garmin_activity_id"] == "activity-a"
+    assert isinstance(result["result"]["pending_checkins"], list)
+    assert mcp_server.get_recovery_context("bogdan", "2026-08-24")["snapshots"]
 
 
 def test_mcp_plan_views_expose_equipment_notes_without_garmin(

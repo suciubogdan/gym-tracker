@@ -21,7 +21,7 @@ def import_recent(
             skipped += 1
             continue
         try:
-            completed = client.get_strength_activity(summary.activity_id)
+            completed = client.get_strength_activity(summary.activity_id, summary=summary)
         except Exception:
             raw_getter = getattr(client, "raw_activity_payload", None)
             if callable(raw_getter):

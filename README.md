@@ -169,6 +169,14 @@ The optional coaching layer reconciles planned sessions, imported Garmin activit
 subjective feedback. Missing feedback is allowed, missed workouts are not counted as failed sets,
 and the deterministic progression engine remains the safe baseline.
 
+Agentic coaching always starts by importing the latest 7 days of activities plus today's normalized
+recovery snapshot through the compound MCP refresh operation. Recovery includes available Training
+Status/load, readiness, HRV, sleep, resting heart rate, and Body Battery fields. The deterministic
+assessment may suppress increases or request review, but good recovery never adds load and recovery
+alone never reduces a workout. This bounded local import has standing authorization in this private
+repository; outbound Garmin template sync and calendar scheduling still require a separate preview
+and explicit approval.
+
 ```bash
 uv run gym coach check-in --person bogdan
 uv run gym coach feedback bogdan --date 2026-08-24 --workout A \
@@ -220,8 +228,9 @@ notes locally, while Garmin diff/sync and schedule previews repeat the notes wit
 keys and selected locations. See [agentic coaching workflow](docs/coaching.md) for the full tool and
 approval flow.
 
-Mutating MCP tools require `confirm=true`. Garmin tools additionally default to `dry_run=true`.
-Import stays a CLI operation initially so credential/network diagnostics remain explicit.
+Mutating MCP tools require `confirm=true`. The coach protocol supplies it for its mandatory local
+history refresh. Outbound Garmin tools additionally default to `dry_run=true` and remain separately
+approval-gated.
 
 ## Suggested weekly workflow
 

@@ -156,6 +156,50 @@ class CompletedStrengthWorkout(DomainModel):
     source_summary: dict[str, Any] = Field(default_factory=dict)
 
 
+class DailyRecoverySnapshot(DomainModel):
+    person: str
+    calendar_date: date
+    imported_at: datetime
+    training_status: str | None = None
+    acute_training_load: float | None = Field(default=None, ge=0)
+    training_load_status: str | None = None
+    training_load_balance: str | None = None
+    vo2_max: float | None = Field(default=None, ge=0)
+    readiness_score: int | None = Field(default=None, ge=0, le=100)
+    readiness_level: str | None = None
+    recovery_time_minutes: int | None = Field(default=None, ge=0)
+    hrv_status: str | None = None
+    overnight_hrv_ms: float | None = Field(default=None, ge=0)
+    hrv_baseline_low_ms: float | None = Field(default=None, ge=0)
+    hrv_baseline_high_ms: float | None = Field(default=None, ge=0)
+    sleep_score: int | None = Field(default=None, ge=0, le=100)
+    sleep_seconds: int | None = Field(default=None, ge=0)
+    resting_heart_rate: int | None = Field(default=None, ge=0)
+    body_battery_at_wake: int | None = Field(default=None, ge=0, le=100)
+    body_battery_current: int | None = Field(default=None, ge=0, le=100)
+    body_battery_change: int | None = Field(default=None, ge=-100, le=100)
+    available_sources: list[str] = Field(default_factory=list)
+    unavailable_sources: list[str] = Field(default_factory=list)
+
+
+class RecoveryState(StrEnum):
+    NORMAL = "normal"
+    CAUTION = "caution"
+    REVIEW = "review"
+    UNKNOWN = "unknown"
+
+
+class RecoveryAssessment(DomainModel):
+    person: str
+    as_of: date
+    state: RecoveryState
+    data_quality: Literal["complete", "partial", "none"]
+    snapshot_dates: list[date] = Field(default_factory=list)
+    signals: list[str] = Field(default_factory=list)
+    suppress_increases: bool = False
+    recommendation: str
+
+
 class ActivitySummary(DomainModel):
     activity_id: str
     started_at: datetime

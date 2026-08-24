@@ -9,6 +9,7 @@ works without an agent and never calls an LLM API.
 - `data/attendance/<person>/<date>-<workout>.yaml`: completed, partial, missed, or rescheduled.
 - `data/feedback/<person>/<date>-<workout>.yaml`: optional overall and per-exercise feedback.
 - `data/imported/<person>/<activity-id>.yaml`: objective Garmin sets and reps.
+- `data/imported/<person>/daily/<date>.yaml`: normalized daily Garmin recovery evidence.
 - `weeks/<monday>/<person>.yaml`: the approved, dated prescription for one week.
 - `data/coaching/proposals/<person>/<monday>.yaml`: ephemeral proposal awaiting review.
 
@@ -28,6 +29,11 @@ Evidence is deliberately allowed to be incomplete:
 - Missed: record attendance; do not count it as failure and do not regress because of it.
 - Partial: completed exercises can count; skipped exercises are not treated as failed sets.
 - Pain, “too hard,” or technique breakdown: suppress an automatic increase and flag the issue.
+- Recovery `normal`: context only; it never creates an increase.
+- Recovery `caution`: suppress increases and otherwise hold the current prescription.
+- Recovery `review`: suppress increases and ask how the person feels before proposing a week-only
+  reduction.
+- Missing readiness or another recovery source: treat the snapshot as partial and continue.
 
 Feedback is optional. The coach may ask a short follow-up, but lack of an answer never blocks the
 next week from being prepared.
@@ -153,15 +159,25 @@ conversation can be as short as “Workout A felt good; bench was easy, everythi
 “I missed C and want to do it Friday.” The agent records only stated facts and shows changes before
 applying them.
 
-For recurring interaction, schedule a Codex task that runs `import_recent_workouts` and
-`get_pending_checkins` after expected training days, and a weekly task that calls
-`get_coaching_context` and `propose_next_week`. Give the task permission to import normalized history,
-but keep proposal apply, Garmin sync, and Garmin schedule as approval-gated actions.
+Every coaching interaction starts with `refresh_coaching_data(confirm=true, days=7)`. It performs a
+bounded Garmin activity read plus today's recovery read, persists new normalized workouts and the
+daily recovery snapshot, and only then returns recovery assessment, reconciliation, and pending
+check-ins. This repository treats that import as standing-authorized local synchronization: the user
+does not need to ask for it. It does not create, update, schedule, or delete anything in Garmin. If
+activity refresh fails, the agent must identify its local evidence as stale and must not derive
+progression changes from it. Missing optional recovery endpoints are reported as partial data.
+
+For recurring interaction, schedule a Codex task that runs `refresh_coaching_data` after expected
+training days, and a weekly task that refreshes before calling `get_coaching_context` and
+`propose_next_week`. The bounded history import has standing authorization, but proposal apply,
+outbound Garmin sync, and Garmin schedule remain approval-gated actions.
 
 ## MCP tools
 
-The MCP surface includes reading plans, locations, and history; importing recent Garmin workouts
-with confirmation; recording feedback/attendance; reconciliation/adherence; coaching context;
+The MCP surface includes reading plans, locations, and history; the mandatory compound
+`refresh_coaching_data` activity/recovery import and reconciliation call; reading deterministic
+recovery context; importing recent Garmin workouts directly;
+recording feedback/attendance; reconciliation/adherence; coaching context;
 deterministic and custom proposal creation; proposal inspection/application; weekly plan inspection;
 pending check-ins; and week-aware Garmin diff/sync/schedule. Training-plan workouts and dated weekly
 sessions include generated `equipment_notes` without a Garmin call. Garmin previews also include

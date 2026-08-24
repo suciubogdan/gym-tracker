@@ -1,4 +1,4 @@
 interface:
   display_name: "Gym Coach"
   short_description: "Feedback-aware weekly strength coaching"
-  default_prompt: "Use $gym-coach to review my recent training and propose next week."
+  default_prompt: "Use $gym-coach, refresh Garmin activity and recovery first, then review my training and propose next week."

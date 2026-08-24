@@ -6,6 +6,7 @@ from typing import Protocol
 from gym_tracker.domain.models import (
     ActivitySummary,
     CompletedStrengthWorkout,
+    DailyRecoverySnapshot,
     GarminWorkout,
     GarminWorkoutRef,
     PlannedWorkout,
@@ -32,4 +33,8 @@ class GarminClient(Protocol):
 
     def list_activities(self, start: date, end: date) -> list[ActivitySummary]: ...
 
-    def get_strength_activity(self, activity_id: str) -> CompletedStrengthWorkout: ...
+    def get_strength_activity(
+        self, activity_id: str, summary: ActivitySummary | None = None
+    ) -> CompletedStrengthWorkout: ...
+
+    def get_daily_recovery(self, calendar_date: date) -> DailyRecoverySnapshot: ...

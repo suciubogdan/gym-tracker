@@ -17,7 +17,10 @@ from gym_tracker.storage.repository import ProjectRepository, find_project_root
 mcp = MCPServer(
     "gym-tracker",
     instructions=(
-        "Local plans are canonical. Inspect proposals before applying them. "
+        "Local plans are canonical. Before coaching, check-ins, reconciliation, or progression "
+        "advice, always call refresh_coaching_data(confirm=true) so Garmin activity and recovery "
+        "evidence are current. "
+        "Inspect proposals before applying them. "
         "Garmin synchronization defaults to dry-run and external mutations require confirmation."
     ),
 )
@@ -46,6 +49,12 @@ def get_recent_workouts(person: str, days: int = 7) -> list[dict[str, Any]]:
 
 
 @mcp.tool()
+def get_recovery_context(person: str, as_of: str) -> dict[str, Any]:
+    """Read normalized recovery snapshots and their deterministic assessment."""
+    return _service().get_recovery_context(person, date.fromisoformat(as_of))
+
+
+@mcp.tool()
 def import_recent_workouts(person: str, days: int = 7, confirm: bool = False) -> dict[str, Any]:
     """Import normalized Garmin history locally only when confirm=true."""
     if not confirm:
@@ -54,6 +63,34 @@ def import_recent_workouts(person: str, days: int = 7, confirm: bool = False) ->
             "reason": "Set confirm=true; this reads Garmin and writes normalized local history.",
         }
     return {"imported": True, "result": _service().import_workouts(person, days)}
+
+
+@mcp.tool()
+def refresh_coaching_data(
+    person: str,
+    week: str,
+    as_of: str,
+    days: int = 7,
+    confirm: bool = False,
+) -> dict[str, Any]:
+    """Import Garmin activity/recovery data, then reconcile and return coaching evidence."""
+    if not confirm:
+        return {
+            "refreshed": False,
+            "reason": (
+                "Set confirm=true; coaching must first read Garmin and write normalized local "
+                "history."
+            ),
+        }
+    return {
+        "refreshed": True,
+        "result": _service().refresh_coaching_data(
+            person,
+            week=date.fromisoformat(week),
+            as_of=date.fromisoformat(as_of),
+            days=days,
+        ),
+    }
 
 
 @mcp.tool()

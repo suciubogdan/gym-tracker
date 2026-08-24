@@ -62,10 +62,16 @@ workout name so a home session cannot mutate the recurring gym load.
 
 ## Coaching rules
 
-Reconcile dated plans, explicit attendance, feedback, and exact Garmin activity identity before
-coaching. Never invent subjective feedback. Missing feedback must not block the next week: use
-objective sets when present and otherwise continue unchanged. Missed workouts are attendance, not
-failed progression; partial sessions count only completed exercises.
+Before every agentic check-in, completed-workout report, reconciliation, progression review, or
+next-week proposal, refresh the latest 7 days of Garmin activities plus today's normalized recovery
+snapshot and only then reconcile dated plans, explicit attendance, feedback, and exact Garmin
+activity identity. This bounded import has standing user approval. If activity import fails, label
+local history stale and do not derive progression changes from it. Optional recovery sources may be
+missing without blocking. A deterministic `caution` or `review` assessment may suppress increases;
+good recovery never causes an increase, and recovery alone never applies a reduction. Never invent
+subjective feedback. Missing feedback must not block the next week: use objective sets when present
+and otherwise continue unchanged. Missed workouts are attendance, not failed progression; partial
+sessions count only completed exercises.
 
 Coach changes are typed and must state week/ongoing scope, old/new values, rationale, and evidence.
 Pain, excessive difficulty, or technique breakdown suppresses automatic increases and prompts
@@ -107,4 +113,5 @@ require `dry_run=false` and `confirm=true`.
 Use `FakeGarminClient` for almost all tests. Live credentials are never a test prerequisite. Cover
 progression boundaries, introduction behavior, failed/missing sets, rounding, serialization,
 activity-id idempotency, strict exercise mapping, sync create/update/no-op/repair, replacement safety,
-schedule idempotency, and independent accounts. Run pytest, Ruff and mypy before handoff.
+activity list/detail metadata fallback, schedule idempotency, and independent accounts. Run pytest,
+Ruff and mypy before handoff.
