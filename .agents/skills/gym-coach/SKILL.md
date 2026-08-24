@@ -5,13 +5,17 @@ description: >-
   partial, missed, or rescheduled workouts; and prepare a safe dated proposal for the next week.
   Use when the user talks about how training went, asks what to do next, reports a missed session,
   wants a check-in, or asks to adjust/sync the coming training week.
+metadata:
+  hermes:
+    tags: [strength-training, garmin, coaching]
 ---
 
 # Gym Coach
 
-Coach through the gym-tracker MCP tools. Keep YAML and deterministic policy authoritative; your role
-is to gather context and feedback, explain tradeoffs, and create a reviewable proposal. Never make
-the Python application call an LLM.
+Coach through the gym-tracker MCP tools. Hermes exposes them with the
+`mcp_gym_tracker_<tool-name>` prefix; Codex may expose the raw tool names. Keep YAML and deterministic
+policy authoritative; your role is to gather context and feedback, explain tradeoffs, and create a
+reviewable proposal. Never make the Python application call an LLM.
 
 ## Run the coaching loop
 
@@ -33,6 +37,11 @@ the Python application call an LLM.
    proposal. After application, inspect `get_weekly_plan`.
 8. For Garmin, preview `get_garmin_diff`/`sync_plan_to_garmin` for that exact week. A real sync and
    scheduling are separate external mutations and each require explicit user approval.
+9. After a persisted import, feedback, attendance, proposal apply, or verified Garmin sync, inspect
+   Git changes. If repository synchronization has been authorized for this deployment, commit only
+   portable personal-data paths (`plans/`, `data/imported/`, `data/attendance/`, `data/feedback/`,
+   `data/sync/`, and `weeks/`) and push to its private remote. Never stage raw payloads, credentials,
+   tokens, transient proposals, or unrelated files. Stop on a Git conflict; do not overwrite it.
 
 ## Coaching policy
 
@@ -53,4 +62,5 @@ the Python application call an LLM.
   explicitly changes the goal.
 
 Read [coaching policy](../../../docs/coaching.md) when you need the change schema, fallback details,
-or an end-to-end command example.
+or an end-to-end command example. Read [Hermes deployment](../../../docs/hermes.md) when running
+through Hermes, WhatsApp, or a cloned checkout.

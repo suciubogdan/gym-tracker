@@ -1,0 +1,45 @@
+# Merge this into ~/.hermes/config.yaml on the Hermes host.
+# Replace both paths and use the absolute path printed by `command -v uv`.
+terminal:
+  cwd: "/absolute/path/to/workout-plans"
+
+mcp_servers:
+  gym_tracker:
+    command: "/absolute/path/to/uv"
+    args:
+      - "run"
+      - "--project"
+      - "/absolute/path/to/workout-plans"
+      - "gym-mcp"
+    env:
+      GYM_TRACKER_ROOT: "/absolute/path/to/workout-plans"
+    enabled: true
+    timeout: 120
+    connect_timeout: 30
+    supports_parallel_tool_calls: false
+    tools:
+      include:
+        - "get_training_plan"
+        - "get_recent_workouts"
+        - "import_recent_workouts"
+        - "get_training_status"
+        - "record_workout_feedback"
+        - "mark_workout_missed"
+        - "mark_workout_rescheduled"
+        - "reconcile_planned_and_completed_workouts"
+        - "get_week_adherence"
+        - "get_coaching_context"
+        - "propose_next_week"
+        - "save_coaching_proposal"
+        - "get_week_proposal"
+        - "apply_week_proposal"
+        - "get_weekly_plan"
+        - "get_pending_checkins"
+        - "get_garmin_diff"
+        - "sync_plan_to_garmin"
+        - "schedule_week"
+      resources: false
+      prompts: false
+
+whatsapp:
+  unauthorized_dm_behavior: "ignore"

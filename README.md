@@ -34,6 +34,10 @@ See [architecture](docs/architecture.md) for layer boundaries and
 [agentic coaching workflow](docs/coaching.md) describes feedback, missed sessions, weekly snapshots,
 and the conversational coach.
 
+To run the agentic layer on another host and talk to it through WhatsApp, see the
+[Hermes deployment guide](docs/hermes.md). Use a private Git remote because normalized history,
+attendance, feedback, weekly plans, and Garmin workout identifiers are portable personal data.
+
 ## Plan and exercise format
 
 Plans live in `plans/bogdan.yaml` and `plans/roxana.yaml`. Each workout contains internal exercise

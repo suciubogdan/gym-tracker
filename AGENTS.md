@@ -7,6 +7,12 @@ This is a local-first strength planner. `plans/*.yaml`, `config/exercises.yaml`,
 capture target, never the canonical plan. The application must work without AI and must not call an
 LLM API.
 
+Portable personal state is intentionally Git-trackable in `data/imported/`, `data/attendance/`,
+`data/feedback/`, `data/sync/`, and `weeks/`. Treat the repository as private health-adjacent data.
+Never commit `data/raw/`, transient proposals, Garmin credentials/tokens, live Hermes
+configuration/state, or WhatsApp sessions. Sanitized configuration examples are allowed. When
+syncing data, stage only the named portable paths and stop on conflicts.
+
 Architecture flows from CLI/MCP → `GymService` → pure domain/storage or the `GarminClient` protocol.
 Keep Garmin-library imports in `gym_tracker/garmin/`. Keep business rules out of the CLI, MCP server,
 and adapter. Read `docs/architecture.md` and `docs/garmin-research.md` before integration changes.
