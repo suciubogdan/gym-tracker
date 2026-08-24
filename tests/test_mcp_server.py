@@ -1,18 +1,21 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import date
 
-from gym_tracker.mcp_server import (
-    apply_week_proposal,
-    import_recent_workouts,
-    mcp,
-)
+import pytest
+
+import gym_tracker.mcp_server as mcp_server
+from gym_tracker.garmin.fake import FakeGarminClient
+from gym_tracker.services import GymService
+from gym_tracker.storage.repository import ProjectRepository
 
 
 def test_coaching_tools_are_registered() -> None:
-    tools = asyncio.run(mcp.list_tools())
+    tools = asyncio.run(mcp_server.mcp.list_tools())
     names = {tool.name for tool in tools}
     assert {
+        "get_training_plan",
         "import_recent_workouts",
         "get_training_locations",
         "record_workout_feedback",
@@ -27,9 +30,50 @@ def test_coaching_tools_are_registered() -> None:
         "apply_week_proposal",
         "get_weekly_plan",
         "get_pending_checkins",
+        "get_garmin_diff",
+        "sync_plan_to_garmin",
+        "schedule_week",
     } <= names
 
 
 def test_mcp_mutations_require_confirmation_before_service_access() -> None:
-    assert import_recent_workouts("bogdan")["imported"] is False
-    assert apply_week_proposal("bogdan", "2026-08-31")["applied"] is False
+    assert mcp_server.import_recent_workouts("bogdan")["imported"] is False
+    assert mcp_server.apply_week_proposal("bogdan", "2026-08-31")["applied"] is False
+    with pytest.raises(ValueError, match="requires confirm=true"):
+        mcp_server.sync_plan_to_garmin("bogdan", dry_run=False)
+    with pytest.raises(ValueError, match="requires confirm=true"):
+        mcp_server.schedule_week("bogdan", "2026-08-31", dry_run=False)
+
+
+def test_mcp_plan_views_expose_equipment_notes_without_garmin(
+    repository: ProjectRepository, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service = GymService(repository)
+    monkeypatch.setattr(mcp_server, "_service", lambda: service)
+
+    plan = mcp_server.get_training_plan("bogdan")
+    weekly = mcp_server.get_weekly_plan("bogdan", "2026-08-31")
+
+    assert plan["workouts"]["A"]["equipment_notes"].startswith("Equipment: ")
+    assert plan["workout_variants"]["home"]["A"]["equipment_notes"].startswith("Equipment: ")
+    assert all(
+        session["equipment_notes"].startswith("Equipment: ") for session in weekly["sessions"]
+    )
+
+
+def test_mcp_garmin_views_include_template_location_and_equipment_notes(
+    repository: ProjectRepository, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client = FakeGarminClient()
+    service = GymService(repository, client_factory=lambda person: client)
+    monkeypatch.setattr(mcp_server, "_service", lambda: service)
+
+    diff = mcp_server.get_garmin_diff("bogdan")
+    assert len(diff) == 8
+    assert {item["template_key"] for item in diff} >= {"gym:A", "home:A"}
+    assert all(item["notes"].startswith("Equipment: ") for item in diff)
+
+    service.sync_plan_to_garmin("bogdan", dry_run=False)
+    schedule = mcp_server.schedule_week("bogdan", date(2026, 8, 31).isoformat())
+    assert all(item["location"] == "gym" for item in schedule)
+    assert all(item["notes"].startswith("Equipment: ") for item in schedule)

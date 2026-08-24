@@ -334,9 +334,8 @@ def coach_plan(
     week: Annotated[str, typer.Option("--week")],
     json_output: Annotated[bool, typer.Option("--json")] = False,
 ) -> None:
-    """Show the effective dated prescription for one week."""
-    plan = _service().get_weekly_plan(person, _parse_week(week))
-    _emit(plan.model_dump(mode="json"), json_output)
+    """Show dated prescriptions, locations, and generated equipment notes."""
+    _emit(_service().get_weekly_plan_view(person, _parse_week(week)), json_output)
 
 
 @coach_app.command("check-in")

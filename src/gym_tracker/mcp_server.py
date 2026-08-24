@@ -29,7 +29,7 @@ def _service() -> GymService:
 
 @mcp.tool()
 def get_training_plan(person: str) -> dict[str, Any]:
-    """Read the canonical local training plan."""
+    """Read gym/home plans with generated equipment notes; no Garmin call is made."""
     return _service().get_training_plan(person)
 
 
@@ -219,9 +219,8 @@ def apply_week_proposal(person: str, target_week: str, confirm: bool = False) ->
 
 @mcp.tool()
 def get_weekly_plan(person: str, week: str) -> dict[str, Any]:
-    """Read the effective dated workout prescriptions for a Monday-starting week."""
-    value = _service().get_weekly_plan(person, date.fromisoformat(week))
-    return value.model_dump(mode="json")
+    """Read dated prescriptions, locations, and equipment notes without a Garmin call."""
+    return _service().get_weekly_plan_view(person, date.fromisoformat(week))
 
 
 @mcp.tool()
@@ -257,7 +256,7 @@ def sync_plan_to_garmin(
 def schedule_week(
     person: str, week: str, dry_run: bool = True, confirm: bool = False
 ) -> list[dict[str, str]]:
-    """Preview or externally schedule A/B/C/D for a Monday-starting ISO week."""
+    """Preview location-aware A/B/C/D with equipment notes, or schedule after confirmation."""
     if not dry_run and not confirm:
         raise ValueError("A Garmin mutation requires confirm=true")
     return _service().schedule_week(person, date.fromisoformat(week), dry_run=dry_run)

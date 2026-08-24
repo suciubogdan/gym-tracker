@@ -210,8 +210,10 @@ uv run gym-mcp
 Configure Codex with the absolute repository working directory and command `uv run gym-mcp`. In
 addition to plan, progression, and Garmin tools, the server exposes confirmed history import,
 attendance/feedback, reconciliation/adherence, coaching context, pending check-ins, reviewable weekly
-proposals, and dated plan inspection. See [agentic coaching workflow](docs/coaching.md) for the full
-tool and approval flow.
+proposals, and dated plan inspection. Canonical and dated plan responses include generated equipment
+notes locally, while Garmin diff/sync and schedule previews repeat the notes with stable template
+keys and selected locations. See [agentic coaching workflow](docs/coaching.md) for the full tool and
+approval flow.
 
 Mutating MCP tools require `confirm=true`. Garmin tools additionally default to `dry_run=true`.
 Import stays a CLI operation initially so credential/network diagnostics remain explicit.

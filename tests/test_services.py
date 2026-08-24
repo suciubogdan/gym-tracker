@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 
@@ -63,3 +63,18 @@ def test_apply_rejects_stale_proposal(repository: ProjectRepository) -> None:
     repository.save_plan(plan)
     with pytest.raises(RuntimeError, match="Plan changed"):
         service.apply_progression("roxana")
+
+
+def test_plan_views_include_derived_equipment_notes(repository: ProjectRepository) -> None:
+    service = GymService(repository)
+
+    plan = service.get_training_plan("bogdan")
+    weekly = service.get_weekly_plan_view("bogdan", date(2026, 8, 31))
+
+    assert plan["workouts"]["A"]["equipment_notes"].startswith("Equipment: barbell + bench — 40 kg")
+    assert (
+        "kettlebell + floor — 16 kg & 24 kg"
+        in plan["workout_variants"]["home"]["A"]["equipment_notes"]
+    )
+    assert weekly["sessions"][0]["location"] == "gym"
+    assert weekly["sessions"][0]["equipment_notes"] == plan["workouts"]["A"]["equipment_notes"]

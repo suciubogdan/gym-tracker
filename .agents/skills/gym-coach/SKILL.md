@@ -20,6 +20,8 @@ reviewable proposal. Never make the Python application call an LLM.
 ## Run the coaching loop
 
 1. Identify the person and Monday-starting target week. Infer them from the conversation when safe.
+   Read `get_training_plan` when selecting a workout; its gym/home workout views include generated
+   equipment notes and do not require a Garmin call.
 2. When fresh Garmin results are needed, explain that normalized history will be written locally and
    call `import_recent_workouts(confirm=true)` if the user's request authorizes it. Then call
    `get_pending_checkins` and `reconcile_planned_and_completed_workouts` for recent sessions.
@@ -37,7 +39,8 @@ reviewable proposal. Never make the Python application call an LLM.
 6. Show the full proposal: dated sessions, each old/new value, scope, rationale, review flags,
    unresolved attendance, and optional questions. Missing feedback does not block the proposal.
 7. Call `apply_week_proposal(confirm=true)` only after the user explicitly approves that displayed
-   proposal. After application, inspect `get_weekly_plan`.
+   proposal. After application, inspect `get_weekly_plan`, including each session's location and
+   generated equipment notes.
 8. For Garmin, preview `get_garmin_diff`/`sync_plan_to_garmin` for that exact week. A real sync and
    scheduling are separate external mutations and each require explicit user approval. When showing
    a dated workout or schedule preview, include its generated equipment notes so the user can prepare

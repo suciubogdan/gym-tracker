@@ -149,8 +149,9 @@ but keep proposal apply, Garmin sync, and Garmin schedule as approval-gated acti
 ## MCP tools
 
 The MCP surface includes reading plans, locations, and history; importing recent Garmin workouts
-with confirmation,
-recording feedback/attendance, reconciliation/adherence, coaching context, deterministic and custom
-proposal creation, proposal inspection/application, weekly plan inspection, pending check-ins, and
-week-aware Garmin diff/sync/schedule. Local apply requires `confirm=true`; external Garmin writes
+with confirmation; recording feedback/attendance; reconciliation/adherence; coaching context;
+deterministic and custom proposal creation; proposal inspection/application; weekly plan inspection;
+pending check-ins; and week-aware Garmin diff/sync/schedule. Training-plan workouts and dated weekly
+sessions include generated `equipment_notes` without a Garmin call. Garmin previews also include
+`template_key`, `location`, and `notes`. Local apply requires `confirm=true`; external Garmin writes
 also require `dry_run=false` and `confirm=true`.

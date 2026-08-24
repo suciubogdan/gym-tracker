@@ -112,3 +112,7 @@ hermes mcp test gym_tracker
 
 After changes to `~/.hermes/config.yaml`, use `/reload-mcp` in an active Hermes conversation or
 restart the gateway.
+
+After pulling a version that adds MCP response fields, reload even when the allowlist itself did not
+change. `get_training_plan` and `get_weekly_plan` then expose equipment notes locally; Garmin diff,
+sync, and schedule previews expose the same notes together with location-aware template identities.

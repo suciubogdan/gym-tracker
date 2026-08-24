@@ -5,13 +5,16 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 from gym_tracker.coaching.service import CoachingService
+from gym_tracker.domain.equipment import equipment_summary
 from gym_tracker.domain.models import (
     AttendanceRecord,
     AttendanceStatus,
     CoachChange,
     CoachingProposal,
     ExerciseFeedback,
+    ExerciseRegistry,
     OverallFeedback,
+    PlannedWorkout,
     ProgressionProposal,
     WeeklyPlan,
     WeekReconciliation,
@@ -39,8 +42,26 @@ class GymService:
     def _default_client(self, person: str) -> GarminClient:
         return GarminConnectAdapter.from_persisted_tokens(person, self.repository.load_registry())
 
+    @staticmethod
+    def _workout_view(workout: PlannedWorkout, registry: ExerciseRegistry) -> dict[str, Any]:
+        value = workout.model_dump(mode="json")
+        value["equipment_notes"] = equipment_summary(workout, registry)
+        return value
+
     def get_training_plan(self, person: str) -> dict[str, Any]:
-        return self.repository.load_plan(person).model_dump(mode="json")
+        plan = self.repository.load_plan(person)
+        registry = self.repository.load_registry()
+        value = plan.model_dump(mode="json")
+        value["workouts"] = {
+            key: self._workout_view(workout, registry) for key, workout in plan.workouts.items()
+        }
+        value["workout_variants"] = {
+            location: {
+                key: self._workout_view(workout, registry) for key, workout in variants.items()
+            }
+            for location, variants in plan.workout_variants.items()
+        }
+        return value
 
     def get_training_locations(self) -> dict[str, Any]:
         return self.repository.load_locations().model_dump(mode="json")
@@ -195,6 +216,14 @@ class GymService:
         return self.repository.load_weekly_plan(person, week) or self._coach().build_weekly_plan(
             person, week
         )
+
+    def get_weekly_plan_view(self, person: str, week: date) -> dict[str, Any]:
+        weekly = self.get_weekly_plan(person, week)
+        registry = self.repository.load_registry()
+        value = weekly.model_dump(mode="json")
+        for payload, session in zip(value["sessions"], weekly.sessions, strict=True):
+            payload["equipment_notes"] = equipment_summary(session.workout, registry)
+        return value
 
     def get_pending_checkins(self, person: str, as_of: date) -> list[dict[str, str]]:
         return self._coach().pending_checkins(person, as_of)
