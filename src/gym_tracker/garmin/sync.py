@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, timedelta
 
 from gym_tracker.domain.equipment import equipment_summary
@@ -22,6 +23,19 @@ WEEKDAYS = {
     "saturday": 5,
     "sunday": 6,
 }
+
+
+@dataclass(frozen=True)
+class _ScheduleItem:
+    scheduled_date: date
+    workout_key: str
+    location: str
+
+
+@dataclass(frozen=True)
+class _ScheduleTarget(_ScheduleItem):
+    workout_id: str
+    notes: str
 
 
 class GarminSyncService:
@@ -146,30 +160,36 @@ class GarminSyncService:
             self.repository.save_sync_state(state)
         return self.diff(person, week_start)
 
-    def schedule_week(
-        self, person: str, week: date, *, dry_run: bool = True
-    ) -> list[dict[str, str]]:
-        if week.weekday() != 0:
-            raise ValueError("--week must be a Monday")
+    def _schedule_items(self, person: str, week: date) -> list[_ScheduleItem]:
         plan = self.repository.load_plan(person)
-        templates = self._desired_templates(person, week)
-        state = self.repository.load_sync_state(person)
-        desired: list[tuple[date, str, str, str]] = []
         weekly = self.repository.load_weekly_plan(person, week)
         if weekly:
-            schedule_items = [
-                (item.scheduled_date, item.workout_key, item.location) for item in weekly.sessions
+            return [
+                _ScheduleItem(item.scheduled_date, item.workout_key, item.location)
+                for item in weekly.sessions
             ]
-        else:
-            schedule_items = []
-            for configured_day, workout_key in plan.weekly_schedule.items():
-                if configured_day.lower() not in WEEKDAYS:
-                    raise ValueError(f"Unknown weekday {configured_day!r}")
-                schedule_items.append(
-                    (week + timedelta(days=WEEKDAYS[configured_day.lower()]), workout_key, "gym")
+        items: list[_ScheduleItem] = []
+        for configured_day, workout_key in plan.weekly_schedule.items():
+            if configured_day.lower() not in WEEKDAYS:
+                raise ValueError(f"Unknown weekday {configured_day!r}")
+            items.append(
+                _ScheduleItem(
+                    week + timedelta(days=WEEKDAYS[configured_day.lower()]),
+                    workout_key,
+                    "gym",
                 )
-        for scheduled_date, workout_key, location in schedule_items:
-            template_key = f"{location}:{workout_key}"
+            )
+        return items
+
+    def _verified_schedule_targets(
+        self, person: str, week: date, items: list[_ScheduleItem]
+    ) -> list[_ScheduleTarget]:
+        templates = self._desired_templates(person, week)
+        state = self.repository.load_sync_state(person)
+        registry = self.repository.load_registry()
+        targets: list[_ScheduleTarget] = []
+        for item in items:
+            template_key = f"{item.location}:{item.workout_key}"
             entry = state.workouts.get(template_key)
             if entry is None:
                 raise RuntimeError(
@@ -182,30 +202,85 @@ class GarminSyncService:
                     f"Workout {template_key} does not match the target week's prescription; "
                     f"run `gym garmin sync {person} --week {week.isoformat()} --execute` first"
                 )
-            desired.append((scheduled_date, workout_key, location, entry.workout_id))
+            targets.append(
+                _ScheduleTarget(
+                    scheduled_date=item.scheduled_date,
+                    workout_key=item.workout_key,
+                    location=item.location,
+                    workout_id=entry.workout_id,
+                    notes=equipment_summary(templates[template_key], registry),
+                )
+            )
+        return targets
 
-        months = {(day.year, day.month) for day, _, _, _ in desired}
+    def _schedule_targets(
+        self, targets: list[_ScheduleTarget], *, dry_run: bool
+    ) -> list[dict[str, str]]:
+        months = {(item.scheduled_date.year, item.scheduled_date.month) for item in targets}
         existing = []
         for year, month in months:
             existing.extend(self.client.list_scheduled_workouts(year, month))
         existing_keys = {(item.workout_id, item.scheduled_date) for item in existing}
-        registry = self.repository.load_registry()
         result: list[dict[str, str]] = []
-        for scheduled_date, workout_key, location, workout_id in desired:
-            already = (workout_id, scheduled_date) in existing_keys
+        for target in targets:
+            already = (target.workout_id, target.scheduled_date) in existing_keys
             result.append(
                 {
-                    "date": scheduled_date.isoformat(),
-                    "workout": workout_key,
-                    "location": location,
-                    "notes": equipment_summary(templates[f"{location}:{workout_key}"], registry),
-                    "garmin_workout_id": workout_id,
+                    "date": target.scheduled_date.isoformat(),
+                    "workout": target.workout_key,
+                    "location": target.location,
+                    "notes": target.notes,
+                    "garmin_workout_id": target.workout_id,
                     "action": "unchanged" if already else "schedule",
                 }
             )
             if not dry_run and not already:
-                self.client.schedule_workout(workout_id, scheduled_date)
+                self.client.schedule_workout(target.workout_id, target.scheduled_date)
         return result
+
+    def schedule_week(
+        self, person: str, week: date, *, dry_run: bool = True
+    ) -> list[dict[str, str]]:
+        if week.weekday() != 0:
+            raise ValueError("--week must be a Monday")
+        items = self._schedule_items(person, week)
+        targets = self._verified_schedule_targets(person, week, items)
+        return self._schedule_targets(targets, dry_run=dry_run)
+
+    def schedule_session(
+        self,
+        person: str,
+        scheduled_date: date,
+        workout_key: str,
+        *,
+        dry_run: bool = True,
+    ) -> dict[str, str]:
+        week = scheduled_date - timedelta(days=scheduled_date.weekday())
+        items = self._schedule_items(person, week)
+        matching = [
+            item
+            for item in items
+            if item.scheduled_date == scheduled_date and item.workout_key == workout_key
+        ]
+        if not matching:
+            same_workout = [item for item in items if item.workout_key == workout_key]
+            if same_workout:
+                planned_date = same_workout[0].scheduled_date.isoformat()
+                raise ValueError(
+                    f"Workout {workout_key} is planned for {planned_date}, "
+                    f"not {scheduled_date.isoformat()}"
+                )
+            same_date = [item for item in items if item.scheduled_date == scheduled_date]
+            if same_date:
+                raise ValueError(
+                    f"{same_date[0].workout_key} is planned for {scheduled_date.isoformat()}, "
+                    f"not {workout_key}"
+                )
+            raise ValueError(
+                f"Workout {workout_key} is not planned in the week of {week.isoformat()}"
+            )
+        targets = self._verified_schedule_targets(person, week, matching)
+        return self._schedule_targets(targets, dry_run=dry_run)[0]
 
 
 from pydantic import BaseModel  # noqa: E402

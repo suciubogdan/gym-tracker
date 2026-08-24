@@ -129,6 +129,18 @@ uv run gym garmin schedule bogdan --week 2026-08-31          # dry-run
 uv run gym garmin schedule bogdan --week 2026-08-31 --execute
 ```
 
+When only one session is approved, preview and schedule only that exact date/key. The location is
+derived from the effective weekly plan, so a dated Home A selects `home:A` automatically:
+
+```bash
+uv run gym garmin schedule-session bogdan --date 2026-08-31 --workout A
+uv run gym garmin schedule-session bogdan --date 2026-08-31 --workout A --execute
+```
+
+The command rejects a mismatched date/key, an unsynchronized selected-location prescription, and a
+duplicate calendar entry. `schedule_week` remains available only for an explicitly approved bulk
+operation.
+
 Scheduling verifies that every remote template hash matches the target week's prescription. This
 prevents an adjusted week from accidentally using stale weights. Template identities are stable
 location/key pairs (`gym:A` through `gym:D`, `home:A` through `home:D`); weekly scheduling selects
@@ -153,5 +165,6 @@ with confirmation; recording feedback/attendance; reconciliation/adherence; coac
 deterministic and custom proposal creation; proposal inspection/application; weekly plan inspection;
 pending check-ins; and week-aware Garmin diff/sync/schedule. Training-plan workouts and dated weekly
 sessions include generated `equipment_notes` without a Garmin call. Garmin previews also include
-`template_key`, `location`, and `notes`. Local apply requires `confirm=true`; external Garmin writes
-also require `dry_run=false` and `confirm=true`.
+`template_key`, `location`, and `notes`. MCP exposes both exact `schedule_session` and bulk
+`schedule_week`; each external write requires `dry_run=false` and `confirm=true`. Local apply also
+requires `confirm=true`.

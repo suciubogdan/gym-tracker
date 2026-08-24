@@ -69,10 +69,11 @@ then emits the station plus the current target load (`kg each` for dumbbells and
 machines/cables). The generated equipment summary participates in the sync hash, so changing a load,
 station, or equipment definition produces an update rather than stale notes.
 
-Scheduling requires the synchronized id for the dated session's location, validates that `--week`
-is a Monday, reads existing calendar entries, and skips matching workout/date pairs. When a weekly
-snapshot exists, diff/sync with `--week` serializes its exact selected-location prescriptions and
-scheduling rejects stale remote hashes.
+Scheduling requires the synchronized id for the dated session's location, reads existing calendar
+entries, and skips matching workout/date pairs. `schedule_session` resolves one exact date/key from
+the effective dated plan; `schedule_week` is the explicit bulk path and requires a Monday. Neither
+accepts a caller-selected location. When a weekly snapshot exists, diff/sync with `--week` serializes
+its exact selected-location prescriptions and scheduling rejects stale remote hashes.
 
 Coaching reconciliation joins the dated plan, explicit attendance, optional feedback, and imported
 activities. Matching is exact by stored Garmin activity id or workout name within the planned/effective

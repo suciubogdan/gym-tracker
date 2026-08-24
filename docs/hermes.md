@@ -86,11 +86,16 @@ From WhatsApp, messages such as these should activate the project skill:
 - “I am working from home; switch Bogdan B this week to the home version.”
 - “Review this week and propose next week.”
 - “Show me the Garmin dry-run for next week.”
+- “Schedule only Home A today.”
 
 For a home request, the agent reads the configured location inventory and proposes the matching
 week-only A/B/C/D variant. It must show a proposal before applying it and must separately preview
 Garmin before any external write. Give Hermes an explicit standing instruction if you want portable personal-data
 changes committed and pushed after each successful interaction. Its allowed Git scope is:
+
+For a request about one dated workout, Hermes must use `schedule_session`; it derives gym/home from
+the approved plan and cannot affect the other sessions. `schedule_week` is reserved for an explicitly
+approved full-week preview.
 
 ```text
 plans/ data/imported/ data/attendance/ data/feedback/ data/sync/ weeks/

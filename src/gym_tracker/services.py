@@ -246,3 +246,19 @@ class GymService:
     ) -> list[dict[str, str]]:
         service = GarminSyncService(self.repository, self.client_factory(person))
         return service.schedule_week(person, week, dry_run=dry_run)
+
+    def schedule_session(
+        self,
+        person: str,
+        scheduled_date: date,
+        workout_key: str,
+        *,
+        dry_run: bool = True,
+    ) -> dict[str, str]:
+        service = GarminSyncService(self.repository, self.client_factory(person))
+        return service.schedule_session(
+            person,
+            scheduled_date,
+            workout_key,
+            dry_run=dry_run,
+        )

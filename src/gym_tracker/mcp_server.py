@@ -253,6 +253,25 @@ def sync_plan_to_garmin(
 
 
 @mcp.tool()
+def schedule_session(
+    person: str,
+    scheduled_date: str,
+    workout_key: str,
+    dry_run: bool = True,
+    confirm: bool = False,
+) -> dict[str, str]:
+    """Preview or schedule one exact dated session; location comes from the local plan."""
+    if not dry_run and not confirm:
+        raise ValueError("A Garmin mutation requires confirm=true")
+    return _service().schedule_session(
+        person,
+        date.fromisoformat(scheduled_date),
+        workout_key,
+        dry_run=dry_run,
+    )
+
+
+@mcp.tool()
 def schedule_week(
     person: str, week: str, dry_run: bool = True, confirm: bool = False
 ) -> list[dict[str, str]]:

@@ -85,6 +85,40 @@ def test_schedule_is_idempotent_and_uses_configured_days(
     assert len(client.scheduled) == 4
 
 
+def test_single_session_schedule_is_exact_and_idempotent(
+    repository: ProjectRepository,
+) -> None:
+    client = FakeGarminClient()
+    service = GarminSyncService(repository, client)
+    service.sync("bogdan", dry_run=False)
+    session_date = date(2026, 8, 31)
+
+    preview = service.schedule_session("bogdan", session_date, "A")
+    assert preview["action"] == "schedule"
+    assert preview["location"] == "gym"
+    assert preview["notes"].startswith("Equipment: ")
+    assert client.scheduled == {}
+
+    applied = service.schedule_session("bogdan", session_date, "A", dry_run=False)
+    assert applied["action"] == "schedule"
+    assert len(client.scheduled) == 1
+    second = service.schedule_session("bogdan", session_date, "A", dry_run=False)
+    assert second["action"] == "unchanged"
+    assert len(client.scheduled) == 1
+
+
+def test_single_session_schedule_rejects_mismatched_date_or_workout(
+    repository: ProjectRepository,
+) -> None:
+    client = FakeGarminClient()
+    service = GarminSyncService(repository, client)
+
+    with pytest.raises(ValueError, match="Workout A is planned for 2026-08-31"):
+        service.schedule_session("bogdan", date(2026, 9, 1), "A")
+    with pytest.raises(ValueError, match="Workout B is planned for 2026-09-01"):
+        service.schedule_session("bogdan", date(2026, 8, 31), "B")
+
+
 def test_two_accounts_keep_independent_sync_ids(repository: ProjectRepository) -> None:
     clients = {"bogdan": FakeGarminClient(), "roxana": FakeGarminClient()}
     for person, client in clients.items():
@@ -158,6 +192,10 @@ def test_weekly_home_session_schedules_home_template_and_keeps_gym_template(
     assert scheduled_a["location"] == "home"
     assert scheduled_a["garmin_workout_id"] == home_a_id
 
+    single = service.schedule_session("bogdan", week, "A")
+    assert single["location"] == "home"
+    assert single["garmin_workout_id"] == home_a_id
+
 
 def test_weekly_home_adjustment_updates_only_home_template_before_scheduling(
     repository: ProjectRepository,
@@ -198,6 +236,8 @@ def test_weekly_home_adjustment_updates_only_home_template_before_scheduling(
 
     with pytest.raises(RuntimeError, match=r"home:A.*target week's prescription"):
         service.schedule_week("bogdan", week)
+    with pytest.raises(RuntimeError, match=r"home:A.*target week's prescription"):
+        service.schedule_session("bogdan", week, "A")
 
     weekly_diff = {item.template_key: item for item in service.diff("bogdan", week)}
     assert weekly_diff["home:A"].action == DiffAction.UPDATE
@@ -209,3 +249,4 @@ def test_weekly_home_adjustment_updates_only_home_template_before_scheduling(
     assert final_state.workouts["home:A"].workout_id == home_a_id
     assert client.replace_calls == 1
     assert service.schedule_week("bogdan", week)[0]["location"] == "home"
+    assert service.schedule_session("bogdan", week, "A")["location"] == "home"

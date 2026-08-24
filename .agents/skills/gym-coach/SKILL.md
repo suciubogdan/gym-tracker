@@ -44,7 +44,9 @@ reviewable proposal. Never make the Python application call an LLM.
 8. For Garmin, preview `get_garmin_diff`/`sync_plan_to_garmin` for that exact week. A real sync and
    scheduling are separate external mutations and each require explicit user approval. When showing
    a dated workout or schedule preview, include its generated equipment notes so the user can prepare
-   weights and confirm access to the required stations.
+   weights and confirm access to the required stations. Use `schedule_session` when the user asks to
+   schedule one workout; use `schedule_week` only when the user explicitly approves all sessions in
+   that week's preview. Never widen approval for one session into a whole-week calendar mutation.
 9. After a persisted import, feedback, attendance, proposal apply, or verified Garmin sync, inspect
    Git changes. If repository synchronization has been authorized for this deployment, commit only
    portable personal-data paths (`plans/`, `data/imported/`, `data/attendance/`, `data/feedback/`,

@@ -32,6 +32,7 @@ def test_coaching_tools_are_registered() -> None:
         "get_pending_checkins",
         "get_garmin_diff",
         "sync_plan_to_garmin",
+        "schedule_session",
         "schedule_week",
     } <= names
 
@@ -41,6 +42,8 @@ def test_mcp_mutations_require_confirmation_before_service_access() -> None:
     assert mcp_server.apply_week_proposal("bogdan", "2026-08-31")["applied"] is False
     with pytest.raises(ValueError, match="requires confirm=true"):
         mcp_server.sync_plan_to_garmin("bogdan", dry_run=False)
+    with pytest.raises(ValueError, match="requires confirm=true"):
+        mcp_server.schedule_session("bogdan", "2026-08-31", "A", dry_run=False)
     with pytest.raises(ValueError, match="requires confirm=true"):
         mcp_server.schedule_week("bogdan", "2026-08-31", dry_run=False)
 
@@ -74,6 +77,10 @@ def test_mcp_garmin_views_include_template_location_and_equipment_notes(
     assert all(item["notes"].startswith("Equipment: ") for item in diff)
 
     service.sync_plan_to_garmin("bogdan", dry_run=False)
+    session = mcp_server.schedule_session("bogdan", "2026-08-31", "A")
     schedule = mcp_server.schedule_week("bogdan", date(2026, 8, 31).isoformat())
+    assert session["workout"] == "A"
+    assert session["location"] == "gym"
+    assert session["notes"].startswith("Equipment: ")
     assert all(item["location"] == "gym" for item in schedule)
     assert all(item["notes"].startswith("Equipment: ") for item in schedule)

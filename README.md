@@ -133,6 +133,7 @@ Sync and scheduling default to dry-run. A real Garmin mutation requires `--execu
 uv run gym garmin sync bogdan                 # preview
 uv run gym garmin sync bogdan --execute       # external mutation
 uv run gym garmin sync bogdan --week 2026-08-31
+uv run gym garmin schedule-session bogdan --date 2026-08-31 --workout A
 uv run gym garmin schedule bogdan --week 2026-08-31
 uv run gym garmin schedule bogdan --week 2026-08-31 --execute
 ```
@@ -147,6 +148,10 @@ the same workout/date pair.
 
 Always inspect dry-run output immediately before `--execute`. Garmin deletions are limited to the
 guarded compatibility fallback; this tool does not delete unrelated remote workouts.
+
+Use `schedule-session` for one explicitly approved workout. It verifies the exact planned date/key,
+derives gym/home from the dated plan, checks the selected template hash, and schedules only that
+entry. Use `schedule` only when the full week's preview has been approved.
 
 Garmin workouts contain exact reps and kilograms. They do not evaluate double progression on the
 watch. Base sync publishes both recurring gym and home A/B/C/D prescriptions; after approving a

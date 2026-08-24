@@ -39,6 +39,7 @@ mcp_servers:
         - "get_pending_checkins"
         - "get_garmin_diff"
         - "sync_plan_to_garmin"
+        - "schedule_session"
         - "schedule_week"
       resources: false
       prompts: false

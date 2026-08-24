@@ -85,6 +85,8 @@ Location changes are week-scoped proposals that replace only the selected dated 
 - Prefer in-place PUT update. Replacement order is create → verify → update state → delete obsolete;
   if verification fails, retain the old workout.
 - Scheduling must use the plan's `weekly_schedule`, not hard-coded weekdays.
+- Single-session scheduling must resolve the exact date/key from the effective dated plan and derive
+  its location. Never widen approval for one session into `schedule_week`.
 - Use a fresh `garmin diff` / dry-run before every external mutation.
 
 ## Operation classes

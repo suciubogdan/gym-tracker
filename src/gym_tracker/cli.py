@@ -417,5 +417,25 @@ def garmin_schedule(
     _emit(_service().schedule_week(person, _parse_week(week), dry_run=dry_run), json_output)
 
 
+@garmin_app.command("schedule-session")
+def garmin_schedule_session(
+    person: str,
+    scheduled_date: Annotated[str, typer.Option("--date")],
+    workout: Annotated[str, typer.Option("--workout")],
+    dry_run: Annotated[bool, typer.Option("--dry-run/--execute")] = True,
+    json_output: Annotated[bool, typer.Option("--json")] = False,
+) -> None:
+    """Schedule one exact planned session. Defaults to a non-mutating preview."""
+    _emit(
+        _service().schedule_session(
+            person,
+            _parse_date(scheduled_date, "--date"),
+            workout,
+            dry_run=dry_run,
+        ),
+        json_output,
+    )
+
+
 if __name__ == "__main__":
     app()
