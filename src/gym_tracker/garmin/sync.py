@@ -9,6 +9,7 @@ from gym_tracker.domain.models import (
     SyncEntry,
 )
 from gym_tracker.garmin.protocol import GarminClient
+from gym_tracker.garmin.serializer import GARMIN_SERIALIZER_VERSION
 from gym_tracker.storage.repository import ProjectRepository, model_hash
 
 WEEKDAYS = {
@@ -34,7 +35,11 @@ class GarminSyncService:
             mapping = registry.require(item.id).garmin
             mapping_subset[item.id] = mapping.model_dump() if mapping else None
         payload = workout.model_copy(update={})
-        return model_hash(payload) + ":" + model_hash(_HashWrapper(value=mapping_subset))
+        hash_context = _HashWrapper(
+            serializer_version=GARMIN_SERIALIZER_VERSION,
+            value=mapping_subset,
+        )
+        return model_hash(payload) + ":" + model_hash(hash_context)
 
     def diff(self, person: str) -> list[GarminDiffItem]:
         plan = self.repository.load_plan(person)
@@ -149,4 +154,5 @@ from pydantic import BaseModel  # noqa: E402
 
 
 class _HashWrapper(BaseModel):
+    serializer_version: str
     value: dict[str, object]

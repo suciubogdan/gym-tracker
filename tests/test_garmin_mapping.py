@@ -9,7 +9,7 @@ from gym_tracker.garmin.serializer import UnmappedExerciseError, serialize_stren
 from gym_tracker.storage.repository import ProjectRepository
 
 
-def test_serializer_uses_verified_mapping_and_weight_grams(
+def test_serializer_uses_verified_mapping_and_weight_kilograms(
     repository: ProjectRepository,
 ) -> None:
     workout = repository.load_plan("bogdan").workouts["A"]
@@ -18,7 +18,9 @@ def test_serializer_uses_verified_mapping_and_weight_grams(
     exercise = repeat["workoutSteps"][0]
     assert exercise["category"] == "BENCH_PRESS"
     assert exercise["exerciseName"] == "BARBELL_BENCH_PRESS"
-    assert exercise["weightValue"] == 40_000
+    # Garmin's workout API interprets weightValue as kilograms. A value of
+    # 40_000 renders as 40.000,0 kg in locales using a decimal comma.
+    assert exercise["weightValue"] == 40
     assert exercise["endConditionValue"] == 8
 
 

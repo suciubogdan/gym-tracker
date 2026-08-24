@@ -4,6 +4,8 @@ from typing import Any
 
 from gym_tracker.domain.models import ExerciseRegistry, PlannedWorkout
 
+GARMIN_SERIALIZER_VERSION = "strength-weight-value-kg-v2"
+
 
 class UnmappedExerciseError(ValueError):
     pass
@@ -53,4 +55,14 @@ def serialize_strength_workout(
             )
         ],
     )
-    return dict(typed.to_dict())
+    payload = dict(typed.to_dict())
+
+    # garminconnect 0.3.11 multiplies this field by the kilogram unit factor
+    # (1,000), but Garmin's workout API/UI interprets weightValue itself as kg.
+    # Preserve the library's verified workout shape and unit metadata while
+    # correcting the value using our canonical kilogram targets.
+    serialized_blocks = payload["workoutSegments"][0]["workoutSteps"]
+    for item, block in zip(workout.exercises, serialized_blocks, strict=True):
+        block["workoutSteps"][0]["weightValue"] = float(item.target_weight_kg)
+
+    return payload

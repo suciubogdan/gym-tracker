@@ -38,9 +38,12 @@ and [`exercise` catalog](https://github.com/cyberjunky/python-garminconnect/blob
 ## Observed payloads
 
 Outgoing strength blocks are repeat groups containing a rep-ended interval and a timed rest.
-`sportTypeId=5` / `strength_training` is supplied by the maintained model. The helper serializes a
-target weight in kilograms to Garmin's `weightValue` in grams. Garmin represents only one rep target,
-so this application sends the bottom of the local rep range; the full range remains canonical YAML.
+`sportTypeId=5` / `strength_training` is supplied by the maintained model. Live verification showed
+that Garmin's workout API interprets `weightValue` as kilograms even though `garminconnect` 0.3.11's
+helper multiplies it by the kilogram unit factor. The adapter corrects the serialized value back to
+the canonical kilogram target while retaining Garmin's unit metadata. Garmin represents only one
+rep target, so this application sends the bottom of the local rep range; the full range remains
+canonical YAML.
 
 The completed strength endpoint returns an envelope resembling:
 
@@ -92,4 +95,3 @@ similar internal exercise.
 Pin the client below the next minor line. Before changing the pin: review upstream workout and auth
 changes, run unit tests, inspect one dry-run diff per account, serialize a sample strength workout,
 and use a nonessential live workout for create/update/schedule verification.
-
