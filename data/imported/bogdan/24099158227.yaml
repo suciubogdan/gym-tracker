@@ -1,0 +1,92 @@
+person: bogdan
+garmin_activity_id: '24099158227'
+started_at: '2026-08-24T16:13:52Z'
+workout_name: Bogdan Home Full Body A
+duration_seconds: 919.6229858398438
+average_heart_rate: 107
+exercises:
+- exercise_id: dumbbell_floor_press
+  sets:
+  - exercise_id: dumbbell_floor_press
+    set_number: 1
+    reps: 10
+    weight_kg: 10.0
+    duration_seconds: 39.062
+    rir: null
+    notes: null
+  - exercise_id: dumbbell_floor_press
+    set_number: 2
+    reps: 10
+    weight_kg: 10.0
+    duration_seconds: 44.536
+    rir: null
+    notes: null
+- exercise_id: band_assisted_pull_up
+  sets:
+  - exercise_id: band_assisted_pull_up
+    set_number: 1
+    reps: 8
+    weight_kg: 40.0
+    duration_seconds: 45.01
+    rir: null
+    notes: null
+  - exercise_id: band_assisted_pull_up
+    set_number: 2
+    reps: 8
+    weight_kg: 40.0
+    duration_seconds: 32.509
+    rir: null
+    notes: null
+- exercise_id: goblet_squat
+  sets:
+  - exercise_id: goblet_squat
+    set_number: 1
+    reps: 10
+    weight_kg: 16.0
+    duration_seconds: 27.094
+    rir: null
+    notes: null
+  - exercise_id: goblet_squat
+    set_number: 2
+    reps: 10
+    weight_kg: 16.0
+    duration_seconds: 30.365
+    rir: null
+    notes: null
+- exercise_id: dumbbell_shoulder_press
+  sets:
+  - exercise_id: dumbbell_shoulder_press
+    set_number: 1
+    reps: 8
+    weight_kg: 8.0
+    duration_seconds: 36.629
+    rir: null
+    notes: null
+  - exercise_id: dumbbell_shoulder_press
+    set_number: 2
+    reps: 8
+    weight_kg: 8.0
+    duration_seconds: 31.546
+    rir: null
+    notes: null
+- exercise_id: kettlebell_deadlift
+  sets:
+  - exercise_id: kettlebell_deadlift
+    set_number: 1
+    reps: 10
+    weight_kg: 24.0
+    duration_seconds: 36.803
+    rir: null
+    notes: null
+  - exercise_id: kettlebell_deadlift
+    set_number: 2
+    reps: 10
+    weight_kg: 24.0
+    duration_seconds: 36.173
+    rir: null
+    notes: null
+imported_at: '2026-08-24T16:55:51.670690Z'
+source: garmin
+source_summary:
+  activity_type: strength_training
+  set_count: 10

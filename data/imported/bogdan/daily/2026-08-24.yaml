@@ -1,0 +1,28 @@
+person: bogdan
+calendar_date: '2026-08-24'
+imported_at: '2026-08-24T17:20:45.684180Z'
+training_status: MAINTAINING_1
+acute_training_load: 132.0
+training_load_status: OPTIMAL
+training_load_balance: AEROBIC_HIGH_SHORTAGE
+vo2_max: 32.2
+readiness_score: null
+readiness_level: null
+recovery_time_minutes: null
+hrv_status: BALANCED
+overnight_hrv_ms: 58.0
+hrv_baseline_low_ms: 53.0
+hrv_baseline_high_ms: 71.0
+sleep_score: 86
+sleep_seconds: 26084
+resting_heart_rate: 50
+body_battery_at_wake: 81
+body_battery_current: 32
+body_battery_change: 73
+available_sources:
+- training_status
+- hrv
+- sleep
+- body_battery
+unavailable_sources:
+- training_readiness
