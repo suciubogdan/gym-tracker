@@ -1,0 +1,55 @@
+person: bogdan
+priorities: [upper_body, chest, back, shoulders, balanced_lower_body]
+schedule:
+  workouts_per_week: 4
+weekly_schedule:
+  monday: A
+  tuesday: B
+  thursday: C
+  saturday: D
+phase:
+  type: introduction
+  sessions: 8
+  progression_aggressiveness: conservative
+workouts:
+  A:
+    name: Bogdan Full Body A
+    emphasis: [chest, back]
+    exercises:
+      - {id: barbell_bench_press, sets: 2, rep_range: [8, 12], target_weight_kg: 40, progression: double_progression, rest_seconds: 120, pairing_key: bench_1}
+      - {id: lat_pulldown, sets: 2, rep_range: [8, 12], target_weight_kg: 35, progression: double_progression, rest_seconds: 90, pairing_key: cable_1}
+      - {id: goblet_squat, sets: 2, rep_range: [8, 12], target_weight_kg: 20, progression: double_progression, rest_seconds: 90}
+      - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 12, progression: double_progression, rest_seconds: 90, pairing_key: bench_2}
+      - {id: romanian_deadlift, sets: 2, rep_range: [8, 12], target_weight_kg: 35, progression: double_progression, rest_seconds: 120}
+      - {id: dumbbell_lateral_raise, sets: 2, rep_range: [10, 15], target_weight_kg: 6, progression: double_progression, rest_seconds: 60}
+  B:
+    name: Bogdan Full Body B
+    emphasis: [back, shoulders]
+    exercises:
+      - {id: seated_cable_row, sets: 2, rep_range: [8, 12], target_weight_kg: 30, progression: double_progression, rest_seconds: 90, pairing_key: cable_1}
+      - {id: incline_dumbbell_bench_press, sets: 2, rep_range: [8, 12], target_weight_kg: 14, progression: double_progression, rest_seconds: 90, pairing_key: bench_1}
+      - {id: barbell_back_squat, sets: 2, rep_range: [8, 12], target_weight_kg: 35, progression: double_progression, rest_seconds: 120}
+      - {id: face_pull, sets: 2, rep_range: [10, 15], target_weight_kg: 15, progression: double_progression, rest_seconds: 60, pairing_key: cable_2}
+      - {id: leg_curl, sets: 2, rep_range: [8, 12], target_weight_kg: 20, progression: double_progression, rest_seconds: 75}
+      - {id: dumbbell_biceps_curl, sets: 2, rep_range: [8, 12], target_weight_kg: 8, progression: double_progression, rest_seconds: 60}
+  C:
+    name: Bogdan Full Body C
+    emphasis: [chest, shoulders]
+    exercises:
+      - {id: incline_dumbbell_bench_press, sets: 2, rep_range: [8, 12], target_weight_kg: 14, progression: double_progression, rest_seconds: 90, pairing_key: bench_1}
+      - {id: lat_pulldown, sets: 2, rep_range: [8, 12], target_weight_kg: 35, progression: double_progression, rest_seconds: 90, pairing_key: cable_1}
+      - {id: leg_press, sets: 2, rep_range: [8, 12], target_weight_kg: 50, progression: double_progression, rest_seconds: 120}
+      - {id: dumbbell_lateral_raise, sets: 2, rep_range: [10, 15], target_weight_kg: 6, progression: double_progression, rest_seconds: 60}
+      - {id: barbell_hip_thrust, sets: 2, rep_range: [8, 12], target_weight_kg: 35, progression: double_progression, rest_seconds: 120}
+      - {id: cable_tricep_kickback, sets: 2, rep_range: [10, 15], target_weight_kg: 10, progression: double_progression, rest_seconds: 60, pairing_key: cable_2}
+  D:
+    name: Bogdan Full Body D
+    emphasis: [back, chest]
+    exercises:
+      - {id: barbell_bench_press, sets: 2, rep_range: [8, 12], target_weight_kg: 40, progression: double_progression, rest_seconds: 120, pairing_key: bench_1}
+      - {id: seated_cable_row, sets: 2, rep_range: [8, 12], target_weight_kg: 30, progression: double_progression, rest_seconds: 90, pairing_key: cable_1}
+      - {id: dumbbell_bulgarian_split_squat, sets: 2, rep_range: [8, 12], target_weight_kg: 10, progression: double_progression, rest_seconds: 90, pairing_key: bench_2}
+      - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 12, progression: double_progression, rest_seconds: 90}
+      - {id: romanian_deadlift, sets: 2, rep_range: [8, 12], target_weight_kg: 35, progression: double_progression, rest_seconds: 120}
+      - {id: face_pull, sets: 2, rep_range: [10, 15], target_weight_kg: 15, progression: double_progression, rest_seconds: 60, pairing_key: cable_2}
+

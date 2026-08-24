@@ -1,0 +1,5 @@
+default_max_load_increase_percent: 10.0
+conservative_successful_sessions_required: 2
+failed_sessions_before_regression: 2
+enable_regression: false
+

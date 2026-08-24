@@ -1,0 +1,5 @@
+accounts:
+  - bogdan
+  - roxana
+# Credentials and session tokens live under ~/.config/gym-tracker/accounts/<person>/.
+

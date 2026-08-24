@@ -1,0 +1,1 @@
+"""YAML-backed local repositories."""

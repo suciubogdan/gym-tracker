@@ -1,0 +1,106 @@
+# Garmin values below were verified against garminconnect 0.3.11's bundled catalog.
+# Use `gym garmin exercises search "term"` before adding or changing a mapping.
+exercises:
+  barbell_bench_press:
+    display_name: Barbell Bench Press
+    muscle_groups: [chest, triceps, anterior_deltoid]
+    increment_kg: 2.5
+    equipment: {type: barbell, station: bench}
+    garmin: {category: BENCH_PRESS, exercise: BARBELL_BENCH_PRESS}
+  incline_dumbbell_bench_press:
+    display_name: Incline Dumbbell Bench Press
+    muscle_groups: [upper_chest, triceps, anterior_deltoid]
+    increment_kg: 2.0
+    equipment: {type: dumbbells, station: incline_bench}
+    garmin: {category: BENCH_PRESS, exercise: INCLINE_DUMBBELL_BENCH_PRESS}
+  lat_pulldown:
+    display_name: Lat Pull-down
+    muscle_groups: [latissimus_dorsi, biceps]
+    increment_kg: 5.0
+    equipment: {type: cable_machine, station: lat_pulldown}
+    garmin: {category: PULL_UP, exercise: LAT_PULLDOWN}
+  seated_cable_row:
+    display_name: Seated Cable Row
+    muscle_groups: [upper_back, latissimus_dorsi, biceps]
+    increment_kg: 5.0
+    equipment: {type: cable_machine, station: seated_row}
+    garmin: {category: ROW, exercise: SEATED_CABLE_ROW}
+  dumbbell_shoulder_press:
+    display_name: Dumbbell Shoulder Press
+    muscle_groups: [deltoids, triceps]
+    increment_kg: 2.0
+    equipment: {type: dumbbells, station: bench}
+    garmin: {category: SHOULDER_PRESS, exercise: DUMBBELL_SHOULDER_PRESS}
+  dumbbell_lateral_raise:
+    display_name: Dumbbell Lateral Raise
+    muscle_groups: [lateral_deltoid]
+    increment_kg: 1.0
+    equipment: {type: dumbbells}
+    garmin: {category: LATERAL_RAISE, exercise: DUMBBELL_LATERAL_RAISE}
+  face_pull:
+    display_name: Face Pull
+    muscle_groups: [rear_deltoid, upper_back]
+    increment_kg: 2.5
+    equipment: {type: cable_machine, station: cable_station}
+    garmin: {category: ROW, exercise: FACE_PULL}
+  dumbbell_biceps_curl:
+    display_name: Dumbbell Biceps Curl
+    muscle_groups: [biceps]
+    increment_kg: 1.0
+    equipment: {type: dumbbells}
+    garmin: {category: CURL, exercise: DUMBBELL_BICEPS_CURL}
+  barbell_back_squat:
+    display_name: Barbell Back Squat
+    muscle_groups: [quadriceps, glutes, hamstrings]
+    increment_kg: 2.5
+    equipment: {type: barbell, station: squat_rack}
+    garmin: {category: SQUAT, exercise: BARBELL_BACK_SQUAT}
+  goblet_squat:
+    display_name: Goblet Squat
+    muscle_groups: [quadriceps, glutes]
+    increment_kg: 2.0
+    equipment: {type: dumbbell}
+    garmin: {category: SQUAT, exercise: GOBLET_SQUAT}
+  romanian_deadlift:
+    display_name: Romanian Deadlift
+    muscle_groups: [hamstrings, glutes, back]
+    increment_kg: 2.5
+    equipment: {type: barbell, station: platform}
+    garmin: {category: DEADLIFT, exercise: ROMANIAN_DEADLIFT}
+  barbell_hip_thrust:
+    display_name: Barbell Hip Thrust with Bench
+    muscle_groups: [glutes, hamstrings]
+    increment_kg: 2.5
+    equipment: {type: barbell, station: hip_thrust_bench}
+    garmin: {category: HIP_RAISE, exercise: BARBELL_HIP_THRUST_WITH_BENCH}
+  dumbbell_bulgarian_split_squat:
+    display_name: Dumbbell Bulgarian Split Squat
+    muscle_groups: [glutes, quadriceps, hamstrings]
+    increment_kg: 2.0
+    equipment: {type: dumbbells, station: bench}
+    garmin: {category: LUNGE, exercise: DUMBBELL_BULGARIAN_SPLIT_SQUAT}
+  leg_press:
+    display_name: Leg Press
+    muscle_groups: [quadriceps, glutes]
+    increment_kg: 5.0
+    equipment: {type: machine, station: leg_press}
+    garmin: {category: SQUAT, exercise: LEG_PRESS}
+  leg_curl:
+    display_name: Leg Curl
+    muscle_groups: [hamstrings]
+    increment_kg: 2.5
+    equipment: {type: machine, station: leg_curl}
+    garmin: {category: LEG_CURL, exercise: LEG_CURL}
+  dumbbell_step_up:
+    display_name: Dumbbell Step-up
+    muscle_groups: [glutes, quadriceps]
+    increment_kg: 2.0
+    equipment: {type: dumbbells, station: box}
+    garmin: {category: SQUAT, exercise: DUMBBELL_STEP_UP}
+  cable_tricep_kickback:
+    display_name: Cable Tricep Kick-back
+    muscle_groups: [triceps]
+    increment_kg: 2.5
+    equipment: {type: cable_machine, station: cable_station}
+    garmin: {category: TRICEPS_EXTENSION, exercise: CABLE_KICKBACK}
+
