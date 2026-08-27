@@ -21,7 +21,6 @@ locations:
         maximum_claimed_resistance_kg: 60
         anchors: [wall_hook, pull_up_bar]
       - type: pull_up_bar
-      - type: suspension_trainer
       - type: chair_or_step
       - type: floor_or_rug
     constraints:

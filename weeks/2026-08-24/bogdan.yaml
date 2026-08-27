@@ -1,0 +1,294 @@
+person: bogdan
+week_start: '2026-08-24'
+created_at: '2026-08-24T14:09:30.222929Z'
+source_plan_hash: d28e563cddaab7226130630c457e2bec757108f7af537bb7dd39917a0afdab70
+sessions:
+- scheduled_date: '2026-08-24'
+  workout_key: A
+  workout:
+    name: Bogdan Home Full Body A
+    emphasis:
+    - chest
+    - back
+    exercises:
+    - id: dumbbell_floor_press
+      sets: 2
+      rep_range:
+      - 8
+      - 12
+      target_weight_kg: 10.0
+      progression: double_progression
+      rest_seconds: 60
+      pairing_key: home_dumbbells_1
+      manual_override: false
+      instructions: []
+      equipment: null
+    - id: band_assisted_pull_up
+      sets: 2
+      rep_range:
+      - 6
+      - 10
+      target_weight_kg: 0.0
+      progression: manual
+      rest_seconds: 60
+      pairing_key: home_pull_up_1
+      manual_override: true
+      instructions:
+      - Choose assistance that leaves about two good reps in reserve.
+      equipment: null
+    - id: goblet_squat
+      sets: 2
+      rep_range:
+      - 10
+      - 15
+      target_weight_kg: 16.0
+      progression: double_progression
+      rest_seconds: 60
+      pairing_key: home_kettlebell_1
+      manual_override: false
+      instructions: []
+      equipment:
+        type: kettlebell
+        station: floor
+    - id: dumbbell_shoulder_press
+      sets: 2
+      rep_range:
+      - 8
+      - 12
+      target_weight_kg: 8.0
+      progression: double_progression
+      rest_seconds: 60
+      pairing_key: home_dumbbells_2
+      manual_override: false
+      instructions: []
+      equipment:
+        type: dumbbells
+        station: floor_or_couch
+    - id: kettlebell_deadlift
+      sets: 2
+      rep_range:
+      - 10
+      - 15
+      target_weight_kg: 24.0
+      progression: double_progression
+      rest_seconds: 60
+      pairing_key: home_kettlebell_2
+      manual_override: false
+      instructions: []
+      equipment: null
+  location: home
+- scheduled_date: '2026-08-25'
+  workout_key: B
+  workout:
+    name: Bogdan Home Full Body B
+    emphasis:
+    - back
+    - shoulders
+    exercises:
+    - id: kettlebell_row
+      sets: 2
+      rep_range:
+      - 10
+      - 15
+      target_weight_kg: 8.0
+      progression: double_progression
+      rest_seconds: 45
+      pairing_key: home_kettlebell_2
+      manual_override: false
+      instructions:
+      - Complete the prescribed reps on each side.
+      equipment: null
+    - id: push_up
+      sets: 2
+      rep_range:
+      - 8
+      - 15
+      target_weight_kg: 0.0
+      progression: manual
+      rest_seconds: 45
+      pairing_key: home_floor_1
+      manual_override: true
+      instructions: []
+      equipment: null
+    - id: kettlebell_swing
+      sets: 2
+      rep_range:
+      - 12
+      - 20
+      target_weight_kg: 16.0
+      progression: double_progression
+      rest_seconds: 60
+      pairing_key: home_kettlebell_1
+      manual_override: false
+      instructions:
+      - Use a crisp hip hinge; stop the set if the back starts doing the work.
+      equipment: null
+    - id: dumbbell_lateral_raise
+      sets: 2
+      rep_range:
+      - 12
+      - 20
+      target_weight_kg: 4.0
+      progression: double_progression
+      rest_seconds: 45
+      pairing_key: home_dumbbells_1
+      manual_override: false
+      instructions: []
+      equipment: null
+    - id: banded_face_pull
+      sets: 2
+      rep_range:
+      - 12
+      - 20
+      target_weight_kg: 0.0
+      progression: manual
+      rest_seconds: 45
+      pairing_key: home_band_1
+      manual_override: true
+      instructions: []
+      equipment: null
+  location: home
+- scheduled_date: '2026-08-26'
+  workout_key: C
+  workout:
+    name: Bogdan Home Full Body C
+    emphasis:
+    - chest
+    - shoulders
+    exercises:
+    - id: push_up
+      sets: 2
+      rep_range:
+      - 8
+      - 15
+      target_weight_kg: 0.0
+      progression: manual
+      rest_seconds: 45
+      pairing_key: home_floor_1
+      manual_override: true
+      instructions: []
+      equipment: null
+    - id: kettlebell_row
+      sets: 2
+      rep_range:
+      - 8
+      - 12
+      target_weight_kg: 16.0
+      progression: double_progression
+      rest_seconds: 60
+      pairing_key: home_kettlebell_1
+      manual_override: false
+      instructions:
+      - Complete the prescribed reps on each side.
+      equipment: null
+    - id: goblet_squat
+      sets: 2
+      rep_range:
+      - 10
+      - 15
+      target_weight_kg: 16.0
+      progression: double_progression
+      rest_seconds: 60
+      pairing_key: home_kettlebell_2
+      manual_override: false
+      instructions: []
+      equipment:
+        type: kettlebell
+        station: floor
+    - id: dumbbell_shoulder_press
+      sets: 2
+      rep_range:
+      - 8
+      - 12
+      target_weight_kg: 8.0
+      progression: double_progression
+      rest_seconds: 60
+      pairing_key: home_dumbbells_1
+      manual_override: false
+      instructions: []
+      equipment:
+        type: dumbbells
+        station: floor_or_couch
+    - id: weighted_hip_raise
+      sets: 2
+      rep_range:
+      - 10
+      - 15
+      target_weight_kg: 24.0
+      progression: double_progression
+      rest_seconds: 60
+      pairing_key: home_floor_2
+      manual_override: false
+      instructions: []
+      equipment: null
+  location: home
+- scheduled_date: '2026-08-29'
+  workout_key: D
+  workout:
+    name: Bogdan Home Full Body D
+    emphasis:
+    - back
+    - chest
+    exercises:
+    - id: dumbbell_floor_press
+      sets: 2
+      rep_range:
+      - 8
+      - 12
+      target_weight_kg: 10.0
+      progression: double_progression
+      rest_seconds: 60
+      pairing_key: home_dumbbells_1
+      manual_override: false
+      instructions: []
+      equipment: null
+    - id: band_assisted_pull_up
+      sets: 2
+      rep_range:
+      - 6
+      - 10
+      target_weight_kg: 0.0
+      progression: manual
+      rest_seconds: 60
+      pairing_key: home_pull_up_1
+      manual_override: true
+      instructions:
+      - Choose assistance that leaves about two good reps in reserve.
+      equipment: null
+    - id: kettlebell_deadlift
+      sets: 2
+      rep_range:
+      - 10
+      - 15
+      target_weight_kg: 24.0
+      progression: double_progression
+      rest_seconds: 60
+      pairing_key: home_kettlebell_1
+      manual_override: false
+      instructions: []
+      equipment: null
+    - id: banded_hamstring_curl
+      sets: 2
+      rep_range:
+      - 8
+      - 15
+      target_weight_kg: 0.0
+      progression: manual
+      rest_seconds: 60
+      pairing_key: home_band_2
+      manual_override: true
+      instructions: []
+      equipment: null
+    - id: dumbbell_biceps_curl
+      sets: 2
+      rep_range:
+      - 10
+      - 15
+      target_weight_kg: 8.0
+      progression: double_progression
+      rest_seconds: 45
+      pairing_key: home_dumbbells_2
+      manual_override: false
+      instructions: []
+      equipment: null
+  location: home

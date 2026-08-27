@@ -1,0 +1,26 @@
+person: roxana
+workouts:
+  gym:A:
+    workout_id: '1676712341'
+    last_synced_hash: 3ff839ee0e246c9c175970505866d3ff1830c16be13fb7415ce8bb6dd25bf37a:4f06988632b647b0ce9d4a2e61a78861522aedcd6bbd89dc2e1c3d7670eb9500
+  gym:B:
+    workout_id: '1676712342'
+    last_synced_hash: 40f729905eca82b3eea96e8527698ff099be877af47c5b637a7d3e7f56496c81:e80b9ecd9f52b77fa4f7952c200a34d3766accd08602cf8bc1fa3508bcfa0af3
+  gym:C:
+    workout_id: '1676712345'
+    last_synced_hash: 0548bf9ff232c1bc8a9dc8fc578c2e63a18a70189a94c7e4628b2d30e570b8d7:a88fe1f1ebf24bee68a6a0076b3b7972fc20bc287ee4678c147a45c4b6e8d0a0
+  gym:D:
+    workout_id: '1676712349'
+    last_synced_hash: 7bd5e48490bc51b9f8303cd9183a8292951f28e63621da13a6fb90ab03cfb45e:10a70a1536c62a945dca2d633aace785883c356d17bf89a52547fbbd1df87fb7
+  home:A:
+    workout_id: '1676712354'
+    last_synced_hash: 5a6ecd66d81b578c39b594b43b2bebc41b30a1ebf8d2786a434e784b269b05a8:52d0b5cb43a6eacbeae9cfb111e33b99378232677574c6d9efbfe541e1aa7c5a
+  home:B:
+    workout_id: '1676712358'
+    last_synced_hash: a9dcb3faca409bf77bf5e2203a071496f16fea51b69672bb85b4256e7c7b7364:0cdd95a1fbb636bcdb79a13a03931aff5abb27bb9982d8b14ed6b7a1068a4d42
+  home:C:
+    workout_id: '1676712361'
+    last_synced_hash: 07c3d6e95a72d5d4bf9bef3db9885270835d77fbcb2965175be59c33866775ee:781782d6419ec5d322db125f6c1515c0d14329ae92cd353fc5d65ace7ba715ab
+  home:D:
+    workout_id: '1676712366'
+    last_synced_hash: 381b70fbaff83635fd7c30d29eb781bde8bca7a3c09465d0104ac2c567431646:f9170215a4f40516a4c00f124e8dbc473042d53a877379da3be9c277337f3e5a

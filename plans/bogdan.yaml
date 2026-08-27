@@ -75,15 +75,15 @@ workout_variants:
       name: Bogdan Home Full Body B
       emphasis: [back, shoulders]
       exercises:
-        - id: trx_inverted_row
+        - id: kettlebell_row
           sets: 2
           rep_range: [10, 15]
-          target_weight_kg: 0
-          progression: manual
-          rest_seconds: 45
-          pairing_key: home_suspension_1
-          manual_override: true
-          instructions: [Move the feet to keep about two good reps in reserve.]
+          target_weight_kg: 8
+          progression: double_progression
+          rest_seconds: 60
+          pairing_key: home_kettlebell_2
+          manual_override: false
+          instructions: [Complete the prescribed reps on each side.]
         - {id: push_up, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_floor_1, manual_override: true}
         - id: kettlebell_swing
           sets: 2
@@ -126,5 +126,5 @@ workout_variants:
           manual_override: true
           instructions: [Choose assistance that leaves about two good reps in reserve.]
         - {id: kettlebell_deadlift, sets: 2, rep_range: [10, 15], target_weight_kg: 24, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_1}
-        - {id: suspension_hamstring_curl, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 60, pairing_key: home_suspension_1, manual_override: true}
+        - {id: banded_hamstring_curl, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 60, pairing_key: home_band_2, manual_override: true}
         - {id: dumbbell_biceps_curl, sets: 2, rep_range: [10, 15], target_weight_kg: 8, progression: double_progression, rest_seconds: 45, pairing_key: home_dumbbells_2}

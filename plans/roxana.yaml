@@ -68,15 +68,15 @@ workout_variants:
           pairing_key: home_kettlebell_1
           equipment: {type: kettlebell, station: floor}
           instructions: [Use the couch or chair as a depth target; stay in a pain-free range and stop if knee discomfort increases.]
-        - id: trx_inverted_row
+        - id: kettlebell_row
           sets: 2
           rep_range: [10, 15]
-          target_weight_kg: 0
-          progression: manual
+          target_weight_kg: 8
+          progression: double_progression
           rest_seconds: 45
-          pairing_key: home_suspension_1
-          manual_override: true
-          instructions: [Move the feet to keep about two good reps in reserve.]
+          pairing_key: home_kettlebell_2
+          manual_override: false
+          instructions: [Complete the prescribed reps on each side.]
         - {id: dumbbell_floor_press, sets: 2, rep_range: [8, 12], target_weight_kg: 6, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_1}
         - id: lateral_band_walk
           sets: 2
@@ -92,7 +92,7 @@ workout_variants:
       emphasis: [hamstrings, glutes]
       exercises:
         - {id: kettlebell_deadlift, sets: 2, rep_range: [10, 15], target_weight_kg: 16, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_1}
-        - {id: suspension_hamstring_curl, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 60, pairing_key: home_suspension_1, manual_override: true}
+        - {id: banded_hamstring_curl, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 60, pairing_key: home_band_2, manual_override: true}
         - {id: incline_push_up, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_couch_1, manual_override: true}
         - id: kettlebell_row
           sets: 2
@@ -118,15 +118,15 @@ workout_variants:
           equipment: {type: kettlebell, station: floor}
           instructions: [Use the couch or chair as a depth target; stay in a pain-free range and stop if knee discomfort increases.]
         - {id: dumbbell_floor_press, sets: 2, rep_range: [8, 12], target_weight_kg: 6, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_1}
-        - id: trx_inverted_row
+        - id: kettlebell_row
           sets: 2
           rep_range: [10, 15]
-          target_weight_kg: 0
-          progression: manual
+          target_weight_kg: 8
+          progression: double_progression
           rest_seconds: 45
-          pairing_key: home_suspension_1
-          manual_override: true
-          instructions: [Move the feet to keep about two good reps in reserve.]
+          pairing_key: home_kettlebell_2
+          manual_override: false
+          instructions: [Complete the prescribed reps on each side.]
         - {id: dumbbell_shoulder_press, sets: 2, rep_range: [8, 12], target_weight_kg: 6, progression: double_progression, rest_seconds: 60, pairing_key: home_dumbbells_2, equipment: {type: dumbbells, station: floor_or_couch}}
     D:
       name: Roxana Home Full Body D
@@ -135,15 +135,15 @@ workout_variants:
         - {id: kettlebell_deadlift, sets: 2, rep_range: [10, 15], target_weight_kg: 16, progression: double_progression, rest_seconds: 60, pairing_key: home_kettlebell_1}
         - {id: single_leg_hip_raise, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_floor_1, manual_override: true}
         - {id: incline_push_up, sets: 2, rep_range: [8, 15], target_weight_kg: 0, progression: manual, rest_seconds: 45, pairing_key: home_couch_1, manual_override: true}
-        - id: trx_inverted_row
+        - id: kettlebell_row
           sets: 2
           rep_range: [10, 15]
-          target_weight_kg: 0
-          progression: manual
+          target_weight_kg: 8
+          progression: double_progression
           rest_seconds: 45
-          pairing_key: home_suspension_1
-          manual_override: true
-          instructions: [Move the feet to keep about two good reps in reserve.]
+          pairing_key: home_kettlebell_2
+          manual_override: false
+          instructions: [Complete the prescribed reps on each side.]
         - id: lateral_band_walk
           sets: 2
           rep_range: [10, 15]
